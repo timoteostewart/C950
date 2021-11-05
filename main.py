@@ -11,8 +11,6 @@ from truck import Truck
 import location
 import data
 
-    
-
 if __name__ == '__main__':
 
     # entities that can have custody of packages
@@ -86,8 +84,7 @@ if __name__ == '__main__':
     # TODO
     
     for x in nonrush_set_ids:
-        print(x)
-        nonrush_set_ids.remove(x)
+        
 
     
 
