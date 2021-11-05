@@ -1,6 +1,5 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-__pycache__/*.*
 *.py[cod]
 *$py.class
 *.pyc
@@ -130,10 +129,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-__pycache__/custodian.cpython-39.pyc
-__pycache__/data.cpython-39.pyc
-__pycache__/hash_table.cpython-39.pyc
-__pycache__/location.cpython-39.pyc
-__pycache__/my_time.cpython-39.pyc
-__pycache__/package.cpython-39.pyc
-__pycache__/truck.cpython-39.pyc
+# temp files
+~*.*

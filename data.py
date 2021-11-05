@@ -55,7 +55,7 @@ def ingest_packages(all_packages_by_id_ht, all_packages_by_zip, hub_package_list
                     a = re.search(pattern, notes)
                     if a:
                         # print(f"affinity to truck {a.group(1)}")
-                        truck_affinity = a.group(1)
+                        truck_affinity = 'truck ' + a.group(1)
                 if "Delayed on flight" in notes:
                     # print("is delayed on flight")
                     pattern = r'until ([0-9:\ am]+)'

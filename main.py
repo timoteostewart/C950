@@ -1,6 +1,5 @@
 # {student_name: "Tim Stewart", student_id: "001476583"}
 
-from custodian import Custodian
 from operator import attrgetter
 from package import Package
 from collections import defaultdict
@@ -57,10 +56,11 @@ if __name__ == '__main__':
 
     west_truck = Truck('truck 1')
     east_truck = Truck('truck 2')
+    third_truck = Truck('truck 3')
 
     # load rush packages
     # load west truck first, then east truck
-    target_truck = west_truck
+    cur_truck_being_loaded = west_truck
     for zip in zips_from_west_to_east:
         rush_packages_in_cur_zip = list(set(all_packages_by_zip[str(zip)]).intersection(rush_set_ids))
 
@@ -69,11 +69,12 @@ if __name__ == '__main__':
         
         # switch to east truck when west truck has half the rush packages
         if len(west_truck.bill_of_lading) >= len(rush_set_ids) // 2:
-            target_truck = east_truck
+            cur_truck_being_loaded = east_truck
 
-        target_truck.delivery_zips.append(zip)
         for x in rush_packages_in_cur_zip:
-            target_truck.bill_of_lading.append(x)
+            cur_truck_being_loaded.bill_of_lading.append(x)
+
+        cur_truck_being_loaded.delivery_zips.add(zip)
 
     # print(west_truck.bill_of_lading)
     # print(west_truck.delivery_zips)
@@ -81,10 +82,41 @@ if __name__ == '__main__':
     # print(east_truck.delivery_zips)
 
     # load nonrush packages, observing any truck affinity restrictions
-    # TODO
-    
-    for x in nonrush_set_ids:
-        
+    print(nonrush_set_ids)
+    cur_truck_being_loaded = west_truck
+    other_truck = east_truck
+    for zip in zips_from_west_to_east:
+        nonrush_packages_in_cur_zip = list(set(all_packages_by_zip[str(zip)]).intersection(nonrush_set_ids))
+        if nonrush_packages_in_cur_zip == []:
+            continue
+
+        # switch to east truck when west truck is full
+        # in that case, partly fill west_truck with current zip code
+        if cur_truck_being_loaded == west_truck:
+            if len(west_truck.bill_of_lading) + len(nonrush_packages_in_cur_zip) > 16:
+                remaining_capacity_of_west_truck = 16 - len(west_truck.bill_of_lading)
+                for i in range(0, remaining_capacity_of_west_truck):
+                    cur_truck_being_loaded.append(nonrush_packages_in_cur_zip[i])
+                cur_truck_being_loaded.delivery_zips.add(zip)
+                
+                cur_truck_being_loaded = east_truck
+                for i in range(remaining_capacity_of_west_truck, len(nonrush_packages_in_cur_zip)):
+                    cur_truck_being_loaded.append(nonrush_packages_in_cur_zip[i])
+                cur_truck_being_loaded.delivery_zips.add(zip)
+            else:
+                for x in nonrush_packages_in_cur_zip:
+                    cur_truck_being_loaded.bill_of_lading.append(x)
+                cur_truck_being_loaded.delivery_zips.add(zip)
+        else: # cur_truck_being_loaded == east_truck
+
+            
+
+
+
+
+
+
+
 
     
 
