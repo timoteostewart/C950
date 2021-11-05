@@ -1,6 +1,7 @@
 import csv
 import re
 
+import config
 import my_time
 
 from hash_table import HashTable
@@ -21,8 +22,7 @@ def ingest_distances():
             print(', '.join(row))
                     
 
-def ingest_packages(all_packages_by_id_ht, all_packages_by_zip, hub_package_list):
-    global all_addresses_ht
+def ingest_packages():
 
     with open('WGUPS Package File.csv') as csvfile:
         distances = csv.reader(csvfile, delimiter=',')
@@ -82,11 +82,11 @@ def ingest_packages(all_packages_by_id_ht, all_packages_by_zip, hub_package_list
 
             current_package = Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity)
 
-            all_packages_by_id_ht.add(str(package_id), current_package)
+            config.all_packages_by_id_ht.add(str(package_id), current_package)
             # all_addresses_ht.add(street_address, zip)
             # all_packages_by_zip.add(zip, package_id)
-            all_packages_by_zip[zip].append(package_id)
+            config.all_packages_by_zip[zip].append(package_id)
             
             # print(current_package)
-            hub_package_list.append(current_package.id)
+            config.hub_package_list.append(current_package.id)
 
