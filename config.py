@@ -2,7 +2,10 @@ from collections import defaultdict
 
 from hash_table import HashTable
 
-all_packages_by_id_ht = HashTable(60)
+HASH_TABLE_LOAD_FACTOR = 0.75
+
+all_packages_by_id_ht = HashTable(40 // HASH_TABLE_LOAD_FACTOR) # 40 distinct packages
+distances_between_pairs = HashTable(729 // HASH_TABLE_LOAD_FACTOR) # 27 locations, so we'll store 729 (= 27²) location pairs
 all_packages_by_zip = defaultdict(list) # 12 distinct delivery codes
 
 hub_package_list = []

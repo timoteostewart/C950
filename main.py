@@ -12,7 +12,11 @@ import data
 if __name__ == '__main__':
 
     
-    # TODO: ingest distances
+    data.ingest_distances()
+
+    config.distances_between_pairs.dump()
+
+    exit()
     
     
     for z in config.zips_from_west_to_east:
@@ -20,16 +24,14 @@ if __name__ == '__main__':
     
     data.ingest_packages()
 
-
-    # 8:00 am
-    current_time = 0
+    current_time = 0 # 8:00 am
     
     # load packages that have morning deadline
     rush_set_ids = set()
     nonrush_set_ids = set()
 
-    # populate `rush_set_ids` with packages with morning deadlines and packages they have to be delivered with
-    for p_id in hub_package_list:
+    # populate `rush_set_ids` with packages with morning deadlines _and_ with packages they have to be delivered with
+    for p_id in config.hub_package_list:
         p = config.all_packages_by_id_ht.get_or_default(str(p_id), '')
         if p.deadline < 1440 and p.when_can_leave_hub <= current_time:
             rush_set_ids.add(p_id)
@@ -39,7 +41,7 @@ if __name__ == '__main__':
                     rush_set_ids.add(each_affinity_id)
     
     # populate `nonrush_set_ids` with all other packages
-    for p_id in hub_package_list:
+    for p_id in config.hub_package_list:
         if p_id not in rush_set_ids:
             nonrush_set_ids.add(p_id)
 

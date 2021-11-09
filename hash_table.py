@@ -3,6 +3,10 @@
 class HashTable:
 
     def __init__(self, capacity):
+        
+        if not isinstance(capacity, int):
+            capacity = int(capacity)
+        
         self.capacity = capacity
         self.table = [None] * capacity
     
