@@ -19,6 +19,7 @@ def ingest_distances():
 
     list_of_locations = []
 
+    # populate `list_of_locations`
     with open('WGUPS Distance Table.csv') as csvfile:
         distances = csv.reader(csvfile, delimiter=',')
         for row in distances:
@@ -30,6 +31,7 @@ def ingest_distances():
                     left_location = left_location[:-8] # strip out trailing parenthetical zip code
                 list_of_locations.append(left_location)
 
+    # populate `config.distances_between_pairs`
     with open('WGUPS Distance Table.csv') as csvfile:
         distances = csv.reader(csvfile, delimiter=',')
         cur_row = 0
@@ -59,6 +61,8 @@ def ingest_distances():
                     # print(f"{left_location} and {right_location}: {distance} ", end='\n')
                     # config.distances_between_pairs.add(K, V)
                         
+def get_distance(street_address1, street_address2):
+    return float(config.distances_between_pairs.get_or_default(f"{street_address1} and {street_address2}", ''))
 
 def ingest_packages():
 
@@ -120,7 +124,7 @@ def ingest_packages():
 
             current_package = Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity)
 
-            config.all_packages_by_id_ht.add(str(package_id), current_package)
+            config.all_packages_by_id[package_id] = current_package
             # all_addresses_ht.add(street_address, zip)
             # all_packages_by_zip.add(zip, package_id)
             config.all_packages_by_zip[zip].append(package_id)
