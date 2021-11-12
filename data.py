@@ -62,6 +62,7 @@ def ingest_distances():
                     # config.distances_between_pairs.add(K, V)
                         
 def get_distance(street_address1, street_address2):
+    # print(f"{street_address1} and {street_address2}")
     return float(config.distances_between_pairs.get_or_default(f"{street_address1} and {street_address2}", ''))
 
 def ingest_packages():
@@ -125,10 +126,7 @@ def ingest_packages():
             current_package = Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity)
 
             config.all_packages_by_id[package_id] = current_package
-            # all_addresses_ht.add(street_address, zip)
-            # all_packages_by_zip.add(zip, package_id)
             config.all_packages_by_zip[zip].append(package_id)
             
-            # print(current_package)
             config.hub_package_list.append(current_package.id)
 

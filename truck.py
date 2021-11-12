@@ -8,22 +8,36 @@ class Truck:
 
     def __init__(self, name):
         self.name = name
+
         self.bill_of_lading = [] # in delivery order
         self.delivery_zips = set()
         self.start_time_this_run = '8:00 am' # default is 8:00 am
+        self.finish_time_this_run = ''
         self.time_on_road_this_run = 0.0 # in minutes
-        self.time_on_road_today = 0.0 # in minutes
         self.distance_on_road_this_run = 0.0 # in miles
-        self.distance_on_road_today = 0.0 # in miles
         self.delivery_log = []
 
+        self.time_on_road_today = 0.0 # in minutes
+        self.distance_on_road_today = 0.0 # in miles
+
     def end_run(self):
+        # update fields
         self.time_on_road_today += self.time_on_road_this_run
         self.distance_on_road_today += self.distance_on_road_this_run
-        config.master_delivery_log.append(self.delivery_log)
 
+        self.finish_time_this_run = my_time.add_minutes_to_clock_time(self.start_time_this_run, self.time_on_road_this_run)
+
+        # store global stats
+        config.master_delivery_log.append(self.delivery_log)
+        config.hub_stats_miles += self.distance_on_road_this_run
+
+        print(f"{self.name}: started {self.start_time_this_run}, finished {self.finish_time_this_run}, miles {self.distance_on_road_this_run}, packages {len(self.delivery_log)}: {self.delivery_log}")
+
+        # reset truck object
         self.bill_of_lading = [] # in delivery order
         self.delivery_zips = set()
+        self.start_time_this_run = self.finish_time_this_run
+        self.finish_time_this_run = ''
         self.time_on_road_this_run = 0.0 # in minutes
         self.distance_on_road_this_run = 0.0 # in miles
         self.delivery_log = []
@@ -35,7 +49,7 @@ class Truck:
 
     def update_time_on_road(self):
         self.delivery_log = []
-        self.distance_on_road_this_run = self.distance_on_road_today
+        self.distance_on_road_this_run = 0.0
         if len(self.bill_of_lading) == 0: # no packages
             pass
         else: # at least 1 package
@@ -57,10 +71,11 @@ class Truck:
             self.distance_on_road_this_run += data.get_distance(last_address, config.HUB_STREET_ADDRESS)
                 
 
-        self.time_on_road_this_run = self.time_on_road_today + self.distance_on_road_this_run * self.MINUTES_PER_MILE
+        self.time_on_road_this_run = self.distance_on_road_this_run * self.MINUTES_PER_MILE
 
     def add_package(self, package_id):
         self.bill_of_lading.append(package_id)
         self.delivery_zips.add(config.all_packages_by_id[package_id].zip)
         self.update_time_on_road()
+        config.hub_package_list.remove(package_id)
 

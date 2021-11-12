@@ -12,71 +12,94 @@ import data
 
 if __name__ == '__main__':
 
-    
     data.ingest_distances()
-
-    # for z in config.zips_from_west_to_east_rush:
-    #     config.all_packages_by_zip[str(z)] = []
-    
     data.ingest_packages()
 
-    current_time = 0 # 8:00 am
-    
-    # load packages that have morning deadline
-    rush_set_ids = set()
-    nonrush_set_ids = set()
-
     # populate `rush_set_ids` with packages with morning deadlines _and_ with packages they have to be delivered with
+    rush_ready_at_800am_ids = set()
+    rush_ready_at_905am_ids = set()
     for p_id in config.hub_package_list:
         p = config.all_packages_by_id[p_id]
-        if p.deadline < 1440 and p.when_can_leave_hub <= current_time:
-            rush_set_ids.add(p_id)
+        if p.deadline < 1440:
+            if p.when_can_leave_hub == 0:
+                rush_ready_at_800am_ids.add(p_id)
+                if p.package_affinities != {0}:
+                    for each_affinity_id in p.package_affinities:
+                        rush_ready_at_800am_ids.add(each_affinity_id)
+            elif p.when_can_leave_hub == 65:
+                rush_ready_at_905am_ids.add(p_id)
+                if p.package_affinities != {0}:
+                    for each_affinity_id in p.package_affinities:
+                        rush_ready_at_905am_ids.add(each_affinity_id)
 
-            if p.package_affinities != {0}:
-                for each_affinity_id in p.package_affinities:
-                    rush_set_ids.add(each_affinity_id)
-    
-    # populate `nonrush_set_ids` with all the other packages
-    for p_id in config.hub_package_list:
-        if p_id not in rush_set_ids:
-            nonrush_set_ids.add(p_id)
-
-    
     truck1 = Truck('truck 1') # truck 1's first run leaves at 8:00 am
+    # special features of this run:
+    #  - rush packages (morning deadline): #1, #13, #14, #15, #16, #20, #29, #30, #31, #34, #37, #40
+    #  - packages with package affinities: #19
     for z in config.zips_from_west_to_east_rush:
-        rush_pkgs_tuple = [(x, config.all_packages_by_id[x].street_address) for x in rush_set_ids if config.all_packages_by_id[x].zip == z]
-        # sort packages on street address so that packages to same address are delivered at same time
-        rush_pkgs_tuple.sort(key=lambda x:x[1])
-        rush_pkgs_list = [x[0] for x in rush_pkgs_tuple]
-        for p in rush_pkgs_list:
+        rush_pkgs_in_this_zip = [x for x in config.hub_package_list if config.all_packages_by_id[x].zip == z and x in rush_ready_at_800am_ids]
+
+        if not rush_pkgs_in_this_zip:
+            continue
+
+        # sort packages in `rush_pkgs_in_this_zip` by address so that packages to same address are delivered at same time
+        rush_tuple = [(x, config.all_packages_by_id[x].street_address) for x in rush_pkgs_in_this_zip]
+        rush_tuple.sort(key=lambda x:x[1])
+        rush_pkgs_in_this_zip = [x[0] for x in rush_tuple]
+        for p in rush_pkgs_in_this_zip:
             truck1.add_package(p)
-    print(f"{len(truck1.delivery_log)} {truck1.delivery_log}")
+    
+    # now add nonrush packages from west to east for zips that the truck already has packages for
+    for z in config.zips_from_west_to_east_nonrush:
+        for p in config.hub_package_list:
+            if len(truck1.bill_of_lading) == 16:
+                break
+            if z in truck1.delivery_zips and config.all_packages_by_id[p].zip == z:
+                truck1.add_package(p)
+    
     truck1.end_run()
 
     truck2 = Truck('truck 2') # truck 2's first run leaves at 9:05 am
+    # special features of this run:
+    #  - rush packages (morning deadline): #6, #25
+    #  - delayed packages: #6, #25, #28, #32
+    #  - packages with vehicle affinities: #3, #18, #36, #38
     truck2.start_time_this_run = '9:05 am'
-    # load any delayed packages that are ready
-    delayed_packages = [x for x in nonrush_set_ids if config.all_packages_by_id[x].when_can_leave_hub > my_time.convert_time_to_minutes_offset('8:00 am') and config.all_packages_by_id[x].when_can_leave_hub <= my_time.convert_time_to_minutes_offset('9:05 am')]
+    # load delayed packages
+    delayed_packages = [x for x in config.hub_package_list if config.all_packages_by_id[x].when_can_leave_hub > my_time.convert_time_to_minutes_offset('8:00 am') and config.all_packages_by_id[x].when_can_leave_hub <= my_time.convert_time_to_minutes_offset('9:05 am')]
     for p in delayed_packages:
         truck2.add_package(p)
-    # load any packages with an affinity to truck 2
-    affinity_packages = [x for x in nonrush_set_ids if config.all_packages_by_id[x].truck_affinity == 'truck 2']
+    # load packages with affinity to truck 2
+    affinity_packages = [x for x in config.hub_package_list if config.all_packages_by_id[x].truck_affinity == 'truck 2']
     # print(affinity_packages)
     for p in affinity_packages:
         truck2.add_package(p)
-    
-    print(f"{len(truck2.delivery_log)} {truck2.delivery_log}")
+    # now add more packages from west to east for zips that the truck already has packages for
+    for z in config.zips_from_west_to_east_nonrush:
+        for p in config.hub_package_list:
+            if len(truck2.bill_of_lading) == 16:
+                break
+            if config.all_packages_by_id[p].zip == z:
+                truck2.add_package(p)
     truck2.end_run()
     
     # truck 1's second run leaves at 10:20 am
-    truck1.start_time_this_run = '10:20 am'
-    # load any delayed packages that are ready
-    delayed_packages = [x for x in nonrush_set_ids if config.all_packages_by_id[x].when_can_leave_hub > my_time.convert_time_to_minutes_offset('9:06 am') and config.all_packages_by_id[x].when_can_leave_hub <= my_time.convert_time_to_minutes_offset('10:20 am')]
-    # print(delayed_packages)
-    for p in delayed_packages:
-        truck1.add_package(p)
-    
-    # print(truck1.delivery_log)
+    # special features of this run:
+    #  - delayed packages: #9
+    # truck1.start_time_this_run = '11:00 am'
+    for z in config.zips_from_west_to_east_nonrush:
+        this_zip = []
+        for p in config.hub_package_list:
+            if len(truck1.bill_of_lading) == 16:
+                break
+            if config.all_packages_by_id[p].zip == z:
+                this_zip.append(p)
+        for x in this_zip:
+            truck1.add_package(x)
+    truck1.end_run()
+
+    print(config.hub_stats_miles)
+    print(config.hub_package_list)
 
 
 

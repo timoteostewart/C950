@@ -17,8 +17,10 @@ all_packages_by_zip = defaultdict(list) # 12 distinct delivery codes
 hub_package_list = []
 delivered_list = []
 
-zips_from_west_to_east_rush = ['84117', '84118', '84123', '84119', '84104', '84103', '84111', '84115',  '84106', '84105', '84121'] # zip code with 9:00am deliveries is bumped to first place
+zips_from_west_to_east_rush = ['84117', '84118', '84123', '84119', '84104', '84103', '84111', '84115', '84107', '84106', '84105', '84121'] # zip code with 9:00am deliveries is bumped to first place
 
-zips_from_west_to_east_nonrush = ['84118', '84123', '84119', '84104', '84103', '84111', '84115', '84117', '84106', '84105', '84121']
+zips_from_west_to_east_nonrush = ['84118', '84123', '84119', '84104', '84103', '84111', '84115', '84107', '84117', '84106', '84105', '84121']
 
 master_delivery_log = []
+
+hub_stats_miles = 0.0
