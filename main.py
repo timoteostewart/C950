@@ -14,6 +14,7 @@ if __name__ == '__main__':
 
     data.ingest_distances()
     data.ingest_packages()
+    
 
     # populate `rush_set_ids` with packages with morning deadlines _and_ with packages they have to be delivered with
     rush_ready_at_800am_ids = set()
