@@ -11,6 +11,7 @@ import my_time
 import data
 
 
+
 if __name__ == '__main__':
 
     data.ingest_distances()
