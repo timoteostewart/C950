@@ -77,5 +77,12 @@ class Truck:
         self.bill_of_lading.append(package_id)
         self.delivery_zips.add(config.all_packages_by_id[package_id].zip)
         self.update_time_on_road()
-        config.hub_package_list.remove(package_id)
+        try:
+            config.hub_package_list.remove(package_id)
+        except ValueError:
+            print(f"{package_id} can't be removed")
+    
+    def add_packages(self, list_ids):
+        for id in list_ids:
+            self.add_package(id)
 

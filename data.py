@@ -25,11 +25,11 @@ def ingest_distances():
         for row in distances:
             if row[0] != '' and row[1] != '' and ord(row[0][0]) <= 90:
                 left_location = row[1]
-                if left_location == "HUB":
-                    left_location = "4001 South 700 East"
-                else:
-                    left_location = left_location[:-8] # strip out trailing parenthetical zip code
+                left_location = left_location[:-8] # strip out trailing parenthetical zip code
                 list_of_locations.append(left_location)
+                lat = row[29]
+                long = row[30]
+                config.street_address_to_lat_long.add(left_location, (lat, long))
 
     # populate `config.distances_between_pairs`
     with open('WGUPS Distance Table.csv') as csvfile:
