@@ -27,8 +27,8 @@ def ingest_distances():
                 left_location = row[1]
                 left_location = left_location[:-8] # strip out trailing parenthetical zip code
                 list_of_locations.append(left_location)
-                lat = row[29]
-                long = row[30]
+                lat = float(row[29])
+                long = float(row[30])
                 config.street_address_to_lat_long.add(left_location, (lat, long))
 
     # populate `config.distances_between_pairs`

@@ -42,10 +42,15 @@ class Truck:
         self.distance_on_road_this_run = 0.0 # in miles
         self.delivery_log = []
 
+
     def add_package_to_delivery_log(self, package_id):
-        cur_time = my_time.convert_minutes_offset_to_time(self.distance_on_road_this_run * self.MINUTES_PER_MILE + my_time.convert_time_to_minutes_offset(self.start_time_this_run))
+        delivery_as_offset = self.distance_on_road_this_run * self.MINUTES_PER_MILE + my_time.convert_time_to_minutes_offset(self.start_time_this_run)
+        cur_time = my_time.convert_minutes_offset_to_time(delivery_as_offset)
         log_entry = (package_id, cur_time)
         self.delivery_log.append(log_entry)
+        if delivery_as_offset > config.all_packages_by_id[package_id].deadline:
+            print(f"package {package_id} was late!")
+
 
     def update_time_on_road(self):
         self.delivery_log = []
@@ -74,6 +79,9 @@ class Truck:
         self.time_on_road_this_run = self.distance_on_road_this_run * self.MINUTES_PER_MILE
 
     def add_package(self, package_id):
+        if config.all_packages_by_id[package_id].when_can_leave_hub > my_time.convert_time_to_minutes_offset(self.start_time_this_run):
+            print(f"package id {package_id} can't leave yet!")
+            
         self.bill_of_lading.append(package_id)
         self.delivery_zips.add(config.all_packages_by_id[package_id].zip)
         self.update_time_on_road()

@@ -7,7 +7,7 @@ import package
 from truck import Truck
 
 import config
-import location
+import geo
 import my_time
 import data
 
@@ -16,6 +16,12 @@ if __name__ == '__main__':
     data.ingest_distances()
     data.ingest_packages()
 
+    
+    
+
+
+
+    exit()
 
     ready_at_eight_oclock = package.retrieve_packages_ready_to_go('8:00 am')
 
@@ -43,23 +49,22 @@ if __name__ == '__main__':
         eight_rush_sorted_greedy.append(p_id)
         eightoclock_rush.remove(p_id)
 
+    # north route
+    truck2 = Truck('truck 2') # truck 2's first run leaves at 8:00 am
+    truck2.add_packages([20, 19, 31, 40, 1, 13, 30, 37, 29, 39, 8, 5, 10, 18])
+    truck2.end_run()
+    
     # southeast route
-    truck1 = Truck('truck 1') # truck 2's first run leaves at 8:00 am
-    truck1.add_packages([14, 15, 16, 34, 22, 26, 24, 18, 11, 23, 12, 36, 17]) # 15 is 9am deadline
+    truck1 = Truck('truck 1') # truck 1's first run leaves at 8:00 am
+    truck1.add_packages([13, 14, 15, 16, 34, 19, 20]) # 15 is 9am deadline
     truck1.end_run()
     
-    # north route
-    truck2 = Truck('truck 2') # truck 1's first run leaves at 8:00 am
-    truck2.add_packages([20, 19, 31, 40, 4, 1, 27, 39, 13, 30, 8, 5, 37, 10, 29])
-    # truck1.add_packages(eight_rush_sorted_greedy) # [19, 40, 37, 34, 31, 30, 29, 20, 16, 15, 14, 13, 1]
-    truck2.end_run()
 
+    
     
 
     # delayed till 9:05 am: 6, 25, 28, 32
     # delayed till 10:20 am: 9
-
-
 
     # truck 1's 2nd run
     truck1.add_packages([21, 32, 35, 38, 33, 28])
