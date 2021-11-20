@@ -1,6 +1,17 @@
 import math
+from collections import namedtuple
 
 import config
+
+Destination = namedtuple('Destination', ['p_id', 'bearing_from_hub', 'distance_from_hub'])
+
+
+def is_bearing_in_angle(bearing, angle1, angle2):
+    if angle2 >= angle1:
+        return bearing >= angle1 and bearing <= angle2
+    else:
+        return bearing >= angle1 or bearing <= angle2
+
 
 def return_bearing_from_hub_to_street_address(street_address: str) -> float:
     coords = config.street_address_to_lat_long.get_or_default(street_address, '')
@@ -16,7 +27,7 @@ def return_bearing_from_coords1_to_coords2(coords1, coords2) -> float: # takes c
     long1_radians = math.radians(long1_degrees)
     long2_radians = math.radians(long2_degrees)
 
-    # bearing calculation was inspired by the information found at https://www.movable-type.co.uk/scripts/latlong.html
+    # the bearing calculation below was inspired by the information found at https://www.movable-type.co.uk/scripts/latlong.html
     DELTA_LAMBDA = long2_radians - long1_radians
     Y = math.cos(lat1_radians) * math.sin(lat2_radians) - math.sin(lat1_radians) * math.cos(lat2_radians) * math.cos(DELTA_LAMBDA)
     X = math.sin(DELTA_LAMBDA) * math.cos(lat2_radians)
@@ -27,7 +38,6 @@ def return_bearing_from_coords1_to_coords2(coords1, coords2) -> float: # takes c
     bearing_degrees *= -1 # translate degrees from math-style counterclockwise orientation to compass-style clockwise orientation
     bearing_degrees += 90 # rotate degrees from math-style "0° means →" to compass-style "0° means ↑"
     bearing_degrees = (bearing_degrees + 360) % 360 # finally, avoid negative degree bearings
-    
     return bearing_degrees
 
 
@@ -50,3 +60,7 @@ def haversine_distance(coords1, coords2) -> float: # takes coordinates in decima
     distance_meters = RADIUS_OF_EARTH_meters * C
     distance_miles = distance_meters * 0.000_621_370 # conversion from meters to miles
     return distance_miles
+
+def get_distance(street_address1, street_address2):
+    # print(f"{street_address1} and {street_address2}")
+    return float(config.distances_between_pairs.get_or_default(f"{street_address1} and {street_address2}", ''))

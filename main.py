@@ -3,6 +3,7 @@
 from operator import attrgetter
 
 from package import Package
+from geo import Destination
 import package
 from truck import Truck
 
@@ -15,71 +16,104 @@ if __name__ == '__main__':
 
     data.ingest_distances()
     data.ingest_packages()
-
     
-    
-
-
-
-    exit()
-
+    # 1. get all packages ready at this time
     ready_at_eight_oclock = package.retrieve_packages_ready_to_go('8:00 am')
 
-    eightoclock_rush = [x for x in ready_at_eight_oclock if config.all_packages_by_id[x].deadline < 1440 or config.all_packages_by_id[x].package_affinities != {0}]
+    # 2. get subset that are rush packages
+    eightoclock_rush_ids = [x for x in ready_at_eight_oclock if config.all_packages_by_id[x].deadline < 1440 or config.all_packages_by_id[x].package_affinities != {0}]
+
+    # 3. add package affinities
     packages_in_affinity = set()
-    for p in eightoclock_rush:
-        if config.all_packages_by_id[p].package_affinities != {0}:
-            packages_in_affinity.update(config.all_packages_by_id[p].package_affinities)
-    for p in packages_in_affinity:
-        if p not in eightoclock_rush:
-            eightoclock_rush.append(p)
+    for p_id in eightoclock_rush_ids:
+        if config.all_packages_by_id[p_id].package_affinities != {0}:
+            packages_in_affinity.update(config.all_packages_by_id[p_id].package_affinities)
+    for p_id in packages_in_affinity:
+        if p_id not in eightoclock_rush_ids:
+            eightoclock_rush_ids.append(p_id)
 
-    eight_rush_sorted_greedy = []
-    cur_location = config.HUB_STREET_ADDRESS
-    while eightoclock_rush:
-        cur_least_distance = 0.0
-        cur_closest_location = ''
-        cur_closest_p_id = 0
-        for p_id in eightoclock_rush:
-            cur_distance = data.get_distance(cur_location, config.all_packages_by_id[p_id].street_address)
-            if cur_distance < cur_least_distance:
-                cur_least_distance = cur_distance
-                cur_closest_location = config.all_packages_by_id[p_id].street_address
-                cur_closest_p_id = p_id
-        eight_rush_sorted_greedy.append(p_id)
-        eightoclock_rush.remove(p_id)
+    eight_oclock_rush_pkgs = []
+    for p_id in eightoclock_rush_ids:
+        eight_oclock_rush_pkgs.append(config.all_packages_by_id[p_id])
 
-    # north route
-    truck2 = Truck('truck 2') # truck 2's first run leaves at 8:00 am
-    truck2.add_packages([20, 19, 31, 40, 1, 13, 30, 37, 29, 39, 8, 5, 10, 18])
-    truck2.end_run()
+    # print(eight_oclock_rush_pkgs)
+   
+    eight_oclock_rush_pkgs.sort(key=lambda x:x.bearing_from_hub)
+    list_of_angles = []
+    for i, t in enumerate(eight_oclock_rush_pkgs):
+        cur_bearing = t.bearing_from_hub
+        next_bearing = -1 # will initialize in if/else block below
+        if i + 1 == len(eight_oclock_rush_pkgs):
+            next_bearing = eight_oclock_rush_pkgs[0].bearing_from_hub + 360
+        else:
+            next_bearing = eight_oclock_rush_pkgs[i+1].bearing_from_hub
+
+        cur_diff = abs(next_bearing - cur_bearing)
+        list_of_angles.append((cur_diff, cur_bearing, next_bearing))
+
+    list_of_angles.sort(key=lambda x:x[0])
+    list_of_angles.reverse()
+
+    print(list_of_angles)
+
+
+    # populate our two clusters
+    cluster1 = []
+    cluster2 = []
+    for pkg in eight_oclock_rush_pkgs:
+        if geo.is_bearing_in_angle(pkg.bearing_from_hub, list_of_angles[0][2], list_of_angles[1][1]):
+            cluster1.append(pkg)
+        else:
+            cluster2.append(pkg)
+        
     
-    # southeast route
-    truck1 = Truck('truck 1') # truck 1's first run leaves at 8:00 am
-    truck1.add_packages([13, 14, 15, 16, 34, 19, 20]) # 15 is 9am deadline
-    truck1.end_run()
+    for x in cluster1:
+        print(f"{x.id} {x.bearing_from_hub}")
+
+    # reorder cluster1 in clockwise bearing order
+    # find first location
+    for i, v in enumerate(cluster1):
+        if v.bearing_from_hub == list_of_angles[0][2]:
+            cluster1 = cluster1[slice(i, len(cluster1))] + cluster1[slice(0, i)]
+            break
+    
+    print("-----")
+    for x in cluster1:
+        print(f"{x.id} {x.bearing_from_hub}")
+    
     
 
+
+
+
+
+    # # north route
+    # truck2 = Truck('truck 2') # truck 2's first run leaves at 8:00 am
+    # truck2.add_packages([20, 19, 31, 40, 1, 13, 37, 30, 29])
+    # truck2.end_run()
     
+    # # southeast route
+    # truck1 = Truck('truck 1') # truck 1's first run leaves at 8:00 am
+    # truck1.add_packages([13, 14, 15, 16, 34, 19, 20]) # 15 is 9am deadline
+    # truck1.end_run()
     
+    # # delayed till 9:05 am: 6, 25, 28, 32
+    # # delayed till 10:20 am: 9
 
-    # delayed till 9:05 am: 6, 25, 28, 32
-    # delayed till 10:20 am: 9
+    # # truck 1's 2nd run
+    # truck1.add_packages([21, 32, 35, 38, 33, 28])
+    # truck1.end_run()
 
-    # truck 1's 2nd run
-    truck1.add_packages([21, 32, 35, 38, 33, 28])
-    truck1.end_run()
+    # # truck 2's 2nd run
+    # # affinity with truck 2:  3, 18, 36, 38
+    # truck2.add_packages([2, 3, 6, 7, 25])
+    # truck2.end_run()
 
-    # truck 2's 2nd run
-    # truck 2: 3, 18, 36, 38
-    truck2.add_packages([2, 3, 6, 7, 25])
-    truck2.end_run()
+    # truck2.add_packages([9])
+    # truck2.end_run()
 
-    truck2.add_packages([9])
-    truck2.end_run()
-
-    print(config.hub_stats_miles)
-    print(f"packages not delivered: {config.hub_package_list}")
+    # print(config.hub_stats_miles)
+    # print(f"packages not delivered: {config.hub_package_list}")
 
 
 

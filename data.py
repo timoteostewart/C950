@@ -2,6 +2,7 @@ import csv
 import re
 
 import config
+import geo
 import my_time
 
 from hash_table import HashTable
@@ -24,12 +25,12 @@ def ingest_distances():
         distances = csv.reader(csvfile, delimiter=',')
         for row in distances:
             if row[0] != '' and row[1] != '' and ord(row[0][0]) <= 90:
-                left_location = row[1]
-                left_location = left_location[:-8] # strip out trailing parenthetical zip code
-                list_of_locations.append(left_location)
+                street_address = row[1]
+                street_address = street_address[:-8] # strip out trailing parenthetical zip code
+                list_of_locations.append(street_address)
                 lat = float(row[29])
                 long = float(row[30])
-                config.street_address_to_lat_long.add(left_location, (lat, long))
+                config.street_address_to_lat_long.add(street_address, (lat, long))
 
     # populate `config.distances_between_pairs`
     with open('WGUPS Distance Table.csv') as csvfile:
@@ -61,12 +62,8 @@ def ingest_distances():
                     # print(f"{left_location} and {right_location}: {distance} ", end='\n')
                     # config.distances_between_pairs.add(K, V)
                         
-def get_distance(street_address1, street_address2):
-    # print(f"{street_address1} and {street_address2}")
-    return float(config.distances_between_pairs.get_or_default(f"{street_address1} and {street_address2}", ''))
 
 def ingest_packages():
-
     with open('WGUPS Package File.csv') as csvfile:
         distances = csv.reader(csvfile, delimiter=',')
         for row in distances:
@@ -123,7 +120,11 @@ def ingest_packages():
                         # a_list.sort()
                         package_affinities = set(a_list)
 
-            current_package = Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity)
+            lat_long = config.street_address_to_lat_long.get_or_default(street_address, '')
+            bearing_from_hub = geo.return_bearing_from_hub_to_street_address(street_address)
+            distance_from_hub = geo.get_distance(config.HUB_STREET_ADDRESS, street_address)
+
+            current_package = Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub)
 
             config.all_packages_by_id[package_id] = current_package
             config.all_packages_by_zip[zip].append(package_id)
