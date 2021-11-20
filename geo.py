@@ -1,7 +1,11 @@
+
 import math
 from collections import namedtuple
 
 import config
+from hash_table import HashTable
+
+street_address_to_lat_long = HashTable(27 // config.HASH_TABLE_LOAD_FACTOR)
 
 Destination = namedtuple('Destination', ['p_id', 'bearing_from_hub', 'distance_from_hub'])
 
@@ -14,7 +18,7 @@ def is_bearing_in_angle(bearing, angle1, angle2):
 
 
 def return_bearing_from_hub_to_street_address(street_address: str) -> float:
-    coords = config.street_address_to_lat_long.get_or_default(street_address, '')
+    coords = street_address_to_lat_long.get_or_default(street_address, '')
     return return_bearing_from_coords1_to_coords2(config.HUB_LAT_LONG, coords)
 
 

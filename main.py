@@ -1,5 +1,6 @@
 # {student_name: "Tim Stewart", student_id: "001476583"}
 
+from functools import reduce
 from operator import attrgetter
 
 from package import Package
@@ -54,33 +55,55 @@ if __name__ == '__main__':
     list_of_angles.sort(key=lambda x:x[0])
     list_of_angles.reverse()
 
-    print(list_of_angles)
+    # print(list_of_angles)
 
 
-    # populate our two clusters
-    cluster1 = []
-    cluster2 = []
+    # populate our two package clusters
+    cluster1_pkgs = []
+    cluster2_pkgs = []
     for pkg in eight_oclock_rush_pkgs:
         if geo.is_bearing_in_angle(pkg.bearing_from_hub, list_of_angles[0][2], list_of_angles[1][1]):
-            cluster1.append(pkg)
+            cluster1_pkgs.append(pkg)
         else:
-            cluster2.append(pkg)
+            cluster2_pkgs.append(pkg)
         
-    
-    for x in cluster1:
-        print(f"{x.id} {x.bearing_from_hub}")
+    # translate package clusters to lists of stops
+    cluster1_stops = []
+    for pkg in cluster1_pkgs:
+        if pkg.street_address not in cluster1_stops:
+            cluster1_stops.append(pkg.street_address)
 
-    # reorder cluster1 in clockwise bearing order
-    # find first location
-    for i, v in enumerate(cluster1):
-        if v.bearing_from_hub == list_of_angles[0][2]:
-            cluster1 = cluster1[slice(i, len(cluster1))] + cluster1[slice(0, i)]
-            break
+    # find weighted center of these stops
+    sum_lat = 0.0
+    sum_long = 0.0
+    for x in cluster1_stops:
+        sum_lat += geo.street_address_to_lat_long.get_or_default(x, '')[0]
+        sum_long += geo.street_address_to_lat_long.get_or_default(x, '')[1]
+    avg_lat = sum_lat / len(cluster1_stops)
+    avg_long = sum_long / len(cluster1_stops)
+
+    print((avg_lat, avg_long))
+
+    for x in cluster1_stops:
+        weighted_center = (avg_lat, avg_long)
+        cur_stop = geo.street_address_to_lat_long.get_or_default(x, '')
+        print(f"{x}: {geo.haversine_distance(weighted_center , cur_stop)}")
+
+
+    # TODO: add stops one at a time in order of decreasing distance from weighted center
+    # insert each new stop between the two existing stops whose combined distance from the new stop is smaller than the combined distance of any other pair of adjacent existing stops
+
+    exit()
+
     
-    print("-----")
-    for x in cluster1:
-        print(f"{x.id} {x.bearing_from_hub}")
+    config.street_address_to_lat_long.get_or_default(b, '')
+
+    # find the stop farthest from hub
+    farthest_stop = [y[0] for y in sorted([(x, geo.get_distance(config.HUB_STREET_ADDRESS, x)) for x in cluster1_stops], key=lambda x:x[1], reverse=True)]
+
     
+    route = [config.HUB_STREET_ADDRESS, farthest_stop, config.HUB_STREET_ADDRESS]
+
     
 
 

@@ -30,7 +30,7 @@ def ingest_distances():
                 list_of_locations.append(street_address)
                 lat = float(row[29])
                 long = float(row[30])
-                config.street_address_to_lat_long.add(street_address, (lat, long))
+                geo.street_address_to_lat_long.add(street_address, (lat, long))
 
     # populate `config.distances_between_pairs`
     with open('WGUPS Distance Table.csv') as csvfile:
@@ -120,7 +120,7 @@ def ingest_packages():
                         # a_list.sort()
                         package_affinities = set(a_list)
 
-            lat_long = config.street_address_to_lat_long.get_or_default(street_address, '')
+            lat_long = geo.street_address_to_lat_long.get_or_default(street_address, '')
             bearing_from_hub = geo.return_bearing_from_hub_to_street_address(street_address)
             distance_from_hub = geo.get_distance(config.HUB_STREET_ADDRESS, street_address)
 
