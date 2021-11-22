@@ -12,32 +12,7 @@ Destination = namedtuple('Destination', ['p_id', 'bearing_from_hub', 'distance_f
 
 Stop = namedtuple('Stop', ['street_address', 'lat_long', 'bearing_from_hub', 'distance_from_hub'])
 
-class Route:
 
-    def __init__(self):
-        self.packages = []
-        self.stops_not_yet_added_to_path = []
-
-        self.circuit = []
-        self.path_to_farthest = []
-        self.path_from_farthest = []
-
-        self.farthest_stop = ''
-
-        self.earliest_bearing = 0.0
-        self.latest_bearing = 0.0
-        # self.bearing_of_farthest_stop = 0.0
-
-        self.weighted_center = (0.0, 0.0)
-        
-    def __str__(self) -> str:
-        path = ''
-        for stop in self.circuit:
-            path += f"\'{stop.street_address}\' "
-        return path
-        
-        
-    
 
 HUB_STOP = Stop(config.HUB_STREET_ADDRESS, config.HUB_LAT_LONG, 0.0, 0.0)
 
@@ -130,3 +105,14 @@ def get_farthest_stop_from_hub(list_of_stops):
             greatest_distance = cur_distance
             farthest_stop = stop
     return farthest_stop
+
+
+def get_weighted_center_of_stops(list_of_stops) -> tuple[float, float]:
+    sum_lat = 0.0
+    sum_long = 0.0
+    for stop in list_of_stops:
+        sum_lat += stop.lat_long[0]
+        sum_long += stop.lat_long[1]
+    avg_lat = sum_lat / len(list_of_stops)
+    avg_long = sum_long / len(list_of_stops)
+    return (avg_lat, avg_long)

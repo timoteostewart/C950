@@ -5,9 +5,9 @@ from operator import attrgetter, index
 
 import geo
 from geo import Stop
-from geo import Route
 import package
 from package import Package
+from route import Route
 from truck import Truck
 import config
 import data
@@ -19,37 +19,32 @@ if __name__ == '__main__':
     data.ingest_packages()
 
     # 1. get all packages ready at 8 o'clock time
-    ready_at_eight_oclock = package.retrieve_packages_ready_to_go('8:00 am')
+    pkgs_eight_oclock_all = [x for x in filter(lambda x: x.when_can_leave_hub == my_time.convert_time_to_minutes_offset('8:00 am'), config.packages_at_hub)]
 
     # 2. get subset that are rush packages
-    eightoclock_rush_ids = [x for x in ready_at_eight_oclock if config.all_packages_by_id[x].deadline < 1440 or config.all_packages_by_id[x].package_affinities != {0}]
-
+    pkgs_eight_oclock_rush = [x for x in filter(lambda x: x.deadline < 1440 and x.when_can_leave_hub == my_time.convert_time_to_minutes_offset('8:00 am'), config.packages_at_hub)]
+    
     # 3. add package affinities for the rush packages
-    packages_in_affinity = set()
-    for p_id in eightoclock_rush_ids:
-        if config.all_packages_by_id[p_id].package_affinities != {0}:
-            packages_in_affinity.update(config.all_packages_by_id[p_id].package_affinities)
-    for p_id in packages_in_affinity:
-        if p_id not in eightoclock_rush_ids:
-            eightoclock_rush_ids.append(p_id)
+    ids_of_packages_in_affinity = set()
+    for pkg in pkgs_eight_oclock_rush:
+        if pkg.package_affinities != {0}:
+            ids_of_packages_in_affinity.update(pkg.package_affinities)
+    for p_id in ids_of_packages_in_affinity:
+        if config.all_packages_by_id[p_id] not in pkgs_eight_oclock_rush:
+            pkgs_eight_oclock_rush.append(config.all_packages_by_id[p_id])
 
-    eight_oclock_rush_pkgs = []
-    for p_id in eightoclock_rush_ids:
-        eight_oclock_rush_pkgs.append(config.all_packages_by_id[p_id])
-
-    # print(eight_oclock_rush_pkgs)
-
-    eight_oclock_rush_pkgs.sort(key=lambda x:x.bearing_from_hub)
-    earliest_bearing = eight_oclock_rush_pkgs[0].bearing_from_hub
-    latest_bearing = eight_oclock_rush_pkgs[-1].bearing_from_hub
+    # 4. group packages into clusters
+    pkgs_eight_oclock_rush.sort(key=lambda x:x.bearing_from_hub)
+    earliest_bearing = pkgs_eight_oclock_rush[0].bearing_from_hub
+    latest_bearing = pkgs_eight_oclock_rush[-1].bearing_from_hub
     list_of_angles = []
-    for i, t in enumerate(eight_oclock_rush_pkgs):
+    for i, t in enumerate(pkgs_eight_oclock_rush):
         cur_bearing = t.bearing_from_hub
         next_bearing = -1 # will initialize in if/else block below
-        if i + 1 == len(eight_oclock_rush_pkgs):
-            next_bearing = eight_oclock_rush_pkgs[0].bearing_from_hub + 360
+        if i + 1 == len(pkgs_eight_oclock_rush):
+            next_bearing = pkgs_eight_oclock_rush[0].bearing_from_hub + 360
         else:
-            next_bearing = eight_oclock_rush_pkgs[i+1].bearing_from_hub
+            next_bearing = pkgs_eight_oclock_rush[i+1].bearing_from_hub
 
         cur_diff = abs(next_bearing - cur_bearing)
         list_of_angles.append((cur_diff, cur_bearing, next_bearing))
@@ -57,59 +52,44 @@ if __name__ == '__main__':
     list_of_angles.sort(key=lambda x:x[0])
     list_of_angles.reverse()
 
-    # print(list_of_angles)
-
     # populate our two package clusters
-    cluster1_pkgs = []
-    cluster2_pkgs = []
-    for pkg in eight_oclock_rush_pkgs:
-        if geo.is_bearing_in_angle(pkg.bearing_from_hub, list_of_angles[0][2], list_of_angles[1][1]):
-            cluster1_pkgs.append(pkg)
-        else:
-            cluster2_pkgs.append(pkg)
-    
     eight_oclock_route_1 = Route()
+    eight_oclock_route_2 = Route()
+    for pkg in pkgs_eight_oclock_rush:
+        if geo.is_bearing_in_angle(pkg.bearing_from_hub, list_of_angles[0][2], list_of_angles[1][1]):
+            eight_oclock_route_1.manifest_required_packages.append(pkg)
+        else:
+            eight_oclock_route_2.manifest_required_packages.append(pkg)
 
+    # add additional packages that are ready and are going to the same place as an existing package
+    existing_addresses = {x.street_address for x in eight_oclock_route_1.manifest_required_packages}
+    for pkg in pkgs_eight_oclock_all:
+        if pkg not in eight_oclock_route_1.manifest_required_packages and pkg not in eight_oclock_route_1.manifest_optional_packages:
+            if pkg.street_address in existing_addresses:
+                print(f"pkg id {pkg.id} going to same address as existing package")
+                eight_oclock_route_1.manifest_optional_packages.append(pkg)
+    
+    eight_oclock_route_1.manifest_all_packages = eight_oclock_route_1.manifest_required_packages + eight_oclock_route_1.manifest_optional_packages
+    
     # translate package clusters to lists of stops
-    for street_address in set([x.street_address for x in cluster1_pkgs]):
+    for street_address in set([x.street_address for x in eight_oclock_route_1.manifest_all_packages]):
         cur_stop = config.all_stops_by_street_address.get_or_default(street_address, '')
         if cur_stop not in eight_oclock_route_1.stops_not_yet_added_to_path:
             eight_oclock_route_1.stops_not_yet_added_to_path.append(cur_stop)
 
-    # find weighted center of these stops
-    sum_lat = 0.0
-    sum_long = 0.0
-    for stop in eight_oclock_route_1.stops_not_yet_added_to_path:
-        sum_lat += stop.lat_long[0]
-        sum_long += stop.lat_long[1]
-    avg_lat = sum_lat / len(eight_oclock_route_1.stops_not_yet_added_to_path)
-    avg_long = sum_long / len(eight_oclock_route_1.stops_not_yet_added_to_path)
-    eight_oclock_route_1.weighted_center = (avg_lat, avg_long)
-
-    eight_oclock_route_1.stops_not_yet_added_to_path.sort(key=lambda stop: geo.haversine_distance(eight_oclock_route_1.weighted_center, stop.lat_long), reverse=True)
-
-    # for stop in eight_oclock_route_1.stops_not_yet_added_to_path:
-    #     print(f"{stop.street_address}: {geo.haversine_distance(eight_oclock_route_1.weighted_center, stop.lat_long)}")
-
+    eight_oclock_route_1.update_weighted_center()
 
     # first, add stop farthest away from hub
     # then add stops on one side of this bearing, and then other side
     # on each side of the first bearing, add stops one at a time in order of decreasing distance from weighted center
     # insert each new stop between the two existing stops whose combined distance from the new stop is smaller than the combined distance of any other pair of adjacent existing stops
 
-    eight_oclock_route_1.farthest_stop = eight_oclock_route_1.stops_not_yet_added_to_path[0]
-    eight_oclock_route_1.path_to_farthest = [geo.HUB_STOP] + [eight_oclock_route_1.farthest_stop]
-    eight_oclock_route_1.path_from_farthest = [eight_oclock_route_1.farthest_stop] + [geo.HUB_STOP]
-    eight_oclock_route_1.stops_not_yet_added_to_path.remove(eight_oclock_route_1.farthest_stop)
+    eight_oclock_route_1.update_farthest_stop()
 
-    print(eight_oclock_route_1.stops_not_yet_added_to_path)
-
-    
-    # print(f"{eight_oclock_route_1.farthest_stop.bearing_from_hub}")
+    # insert stops into the two paths that will later be joined to make a circuit.
+    # one path goes from hub to farthest stop; the other path goes from farthest stop to hub.
+    # movement on the circuit will be more or less clockwise.
     for cur_stop in list(eight_oclock_route_1.stops_not_yet_added_to_path):
-        # print(f"{geo.haversine_distance(eight_oclock_route_1.weighted_center, cur_stop.lat_long)}")
-
-        # if  < eight_oclock_route_1.farthest_stop.bearing_from_hub:
         if geo.is_bearing_in_angle(cur_stop.bearing_from_hub, eight_oclock_route_1.earliest_bearing, eight_oclock_route_1.farthest_stop.bearing_from_hub):
             cur_least_distance = float('inf')
             index_insert_after = -1
@@ -120,7 +100,6 @@ if __name__ == '__main__':
                     index_insert_after = i
             eight_oclock_route_1.path_to_farthest.insert(i + 1, cur_stop)
         else:
-            # print(f"bearing {cur_stop.bearing_from_hub} is late stop")
             cur_least_distance = float('inf')
             index_insert_after = -1
             for i in range(0, len(eight_oclock_route_1.path_from_farthest) - 1):
@@ -134,22 +113,16 @@ if __name__ == '__main__':
     
     eight_oclock_route_1.circuit = eight_oclock_route_1.path_to_farthest + eight_oclock_route_1.path_from_farthest[1:]
 
-    # print(eight_oclock_route_1)
+    print(eight_oclock_route_1)
     print(my_time.convert_minutes_offset_to_time(config.MINUTES_PER_MILE * geo.distance_of_path_of_stops(eight_oclock_route_1.circuit)))
-
+    
+    # add additional packages 
+    # 1. make list of packages that could be delivered
+    optional_packages = []
+    # for 
 
     exit()
 
-    
-    config.street_address_to_lat_long.get_or_default(b, '')
-
-    # find the stop farthest from hub
-    farthest_stop = [y[0] for y in sorted([(x, geo.get_distance(config.HUB_STREET_ADDRESS, x)) for x in cluster1_stops], key=lambda x:x[1], reverse=True)]
-
-    
-    route = [config.HUB_STREET_ADDRESS, farthest_stop, config.HUB_STREET_ADDRESS]
-
-    
 
 
 

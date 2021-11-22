@@ -135,5 +135,5 @@ def ingest_packages():
             config.all_packages_by_id[package_id] = current_package
             # config.all_packages_by_zip[zip].append(package_id)
             
-            config.hub_package_list.append(current_package.id)
+            config.packages_at_hub.append(current_package)
 

@@ -86,7 +86,7 @@ class Truck:
         self.delivery_zips.add(config.all_packages_by_id[package_id].zip)
         self.update_time_on_road()
         try:
-            config.hub_package_list.remove(package_id)
+            config.packages_at_hub.remove(package_id)
         except ValueError:
             print(f"{package_id} can't be removed")
     

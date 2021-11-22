@@ -16,8 +16,8 @@ all_packages_by_id = [None] * 41
 distances_between_pairs = HashTable(729 // HASH_TABLE_LOAD_FACTOR) # 27 possible stops, so we'll store 729 (= 27²) location pairs
 all_stops_by_street_address = HashTable(27 // HASH_TABLE_LOAD_FACTOR) # 27 possible stops
 
-hub_package_list = []
-delivered_list = []
+packages_at_hub = []
+packages_delivered = []
 
 master_delivery_log = []
 
