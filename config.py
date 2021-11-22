@@ -12,8 +12,9 @@ HUB_LAT_LONG = (40.685116081559286, -111.86998980967073)
 
 # all_packages_by_id_ht = HashTable(40 // HASH_TABLE_LOAD_FACTOR) # 40 distinct packages
 all_packages_by_id = [None] * 41
-distances_between_pairs = HashTable(729 // HASH_TABLE_LOAD_FACTOR) # 27 locations, so we'll store 729 (= 27²) location pairs
-all_packages_by_zip = defaultdict(list) # 12 distinct delivery codes
+# all_packages_by_zip = defaultdict(list) # 12 distinct delivery codes
+distances_between_pairs = HashTable(729 // HASH_TABLE_LOAD_FACTOR) # 27 possible stops, so we'll store 729 (= 27²) location pairs
+all_stops_by_street_address = HashTable(27 // HASH_TABLE_LOAD_FACTOR) # 27 possible stops
 
 hub_package_list = []
 delivered_list = []
@@ -21,3 +22,5 @@ delivered_list = []
 master_delivery_log = []
 
 hub_stats_miles = 0.0
+
+

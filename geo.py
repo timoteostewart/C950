@@ -6,9 +6,40 @@ import config
 from hash_table import HashTable
 
 street_address_to_lat_long = HashTable(27 // config.HASH_TABLE_LOAD_FACTOR)
+street_address_to_bearing = HashTable(27 // config.HASH_TABLE_LOAD_FACTOR)
 
 Destination = namedtuple('Destination', ['p_id', 'bearing_from_hub', 'distance_from_hub'])
 
+Stop = namedtuple('Stop', ['street_address', 'lat_long', 'bearing_from_hub', 'distance_from_hub'])
+
+class Route:
+
+    def __init__(self):
+        self.packages = []
+        self.stops_not_yet_added_to_path = []
+
+        self.circuit = []
+        self.path_to_farthest = []
+        self.path_from_farthest = []
+
+        self.farthest_stop = ''
+
+        self.earliest_bearing = 0.0
+        self.latest_bearing = 0.0
+        # self.bearing_of_farthest_stop = 0.0
+
+        self.weighted_center = (0.0, 0.0)
+        
+    def __str__(self) -> str:
+        path = ''
+        for stop in self.circuit:
+            path += f"\'{stop.street_address}\' "
+        return path
+        
+        
+    
+
+HUB_STOP = Stop(config.HUB_STREET_ADDRESS, config.HUB_LAT_LONG, 0.0, 0.0)
 
 def is_bearing_in_angle(bearing, angle1, angle2):
     if angle2 >= angle1:
@@ -60,11 +91,42 @@ def haversine_distance(coords1, coords2) -> float: # takes coordinates in decima
     DELTA_LAMBDA = long2_radians - long1_radians
     A = math.sin(DELTA_PHI / 2) * math.sin(DELTA_PHI / 2) + math.cos(lat1_radians) * math.cos(lat2_radians) * math.sin(DELTA_LAMBDA / 2) * math.sin(DELTA_LAMBDA / 2)
     C = 2 * math.atan2(math.sqrt(A), math.sqrt(1 - A))
-    
     distance_meters = RADIUS_OF_EARTH_meters * C
     distance_miles = distance_meters * 0.000_621_370 # conversion from meters to miles
     return distance_miles
 
+
 def get_distance(street_address1, street_address2):
     # print(f"{street_address1} and {street_address2}")
     return float(config.distances_between_pairs.get_or_default(f"{street_address1} and {street_address2}", ''))
+
+
+def get_distance_between_stops(stop1, stop2):
+    return get_distance(stop1.street_address, stop2.street_address)
+
+
+def distance_of_path(list_of_stops):
+    distance = 0.0
+    if len(list_of_stops) >= 2:
+        for i in range(0, len(list_of_stops) - 1):
+            distance += get_distance(list_of_stops[i], list_of_stops[i+1])
+    return distance
+
+
+def distance_of_path_of_stops(list_of_stops):
+    distance = 0.0
+    if len(list_of_stops) >= 2:
+        for i in range(0, len(list_of_stops) - 1):
+            distance += get_distance_between_stops(list_of_stops[i], list_of_stops[i+1])
+    return distance
+
+
+def get_farthest_stop_from_hub(list_of_stops):
+    greatest_distance = 0.0
+    farthest_stop = ''
+    for stop in list_of_stops:
+        cur_distance = get_distance(config.HUB_STREET_ADDRESS, stop)
+        if cur_distance > greatest_distance:
+            greatest_distance = cur_distance
+            farthest_stop = stop
+    return farthest_stop
