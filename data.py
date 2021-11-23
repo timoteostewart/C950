@@ -3,18 +3,16 @@ import re
 
 import config
 import geo
-from geo import Stop
+import hash_table
+import my_package
 import my_time
-
-from hash_table import HashTable
-from package import Package
 
 # declare hash tables
 HASH_TABLE_LOAD_FACTOR = 0.75 # plan is for hash tables to use up to 75% of their maximum capacity
-all_addresses_ht = HashTable(int(26 // HASH_TABLE_LOAD_FACTOR)) # there are 26 street addresses
-all_packages_ht = HashTable(int(40 // HASH_TABLE_LOAD_FACTOR)) # there are 40 packages
-distances_ht = HashTable(int(351 // HASH_TABLE_LOAD_FACTOR)) # there are 351 location pairs; hash table unit is miles
-# travel_time_ht = HashTable(int(351 // HASH_TABLE_LOAD_FACTOR)) # 351 location pairs; hash table unit is minutes of travel time
+all_addresses_ht = hash_table.HashTable(int(26 // HASH_TABLE_LOAD_FACTOR)) # there are 26 street addresses
+all_packages_ht = hash_table.HashTable(int(40 // HASH_TABLE_LOAD_FACTOR)) # there are 40 packages
+distances_ht = hash_table.HashTable(int(351 // HASH_TABLE_LOAD_FACTOR)) # there are 351 location pairs; hash table unit is miles
+# travel_time_ht = hash_table.HashTable(int(351 // HASH_TABLE_LOAD_FACTOR)) # 351 location pairs; hash table unit is minutes of travel time
 
 
 def ingest_distances():
@@ -65,7 +63,7 @@ def ingest_distances():
                     # config.distances_between_pairs.add(K, V)
                         
     for street_address in list_of_street_addresses:
-        cur_stop = Stop(street_address, geo.street_address_to_lat_long.get_or_default(street_address, ''), geo.street_address_to_bearing.get_or_default(street_address, ''), geo.get_distance(config.HUB_STREET_ADDRESS, street_address))
+        cur_stop = geo.Stop(street_address, geo.street_address_to_lat_long.get_or_default(street_address, ''), geo.street_address_to_bearing.get_or_default(street_address, ''), geo.get_distance(config.HUB_STREET_ADDRESS, street_address))
         config.all_stops_by_street_address.add(street_address, cur_stop)
 
 
@@ -130,7 +128,7 @@ def ingest_packages():
             bearing_from_hub = geo.return_bearing_from_hub_to_street_address(street_address)
             distance_from_hub = geo.get_distance(config.HUB_STREET_ADDRESS, street_address)
 
-            current_package = Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub)
+            current_package = my_package.Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub)
 
             config.all_packages_by_id[package_id] = current_package
             # config.all_packages_by_zip[zip].append(package_id)

@@ -1,18 +1,15 @@
-
 import math
 from collections import namedtuple
 
 import config
-from hash_table import HashTable
+import hash_table
 
-street_address_to_lat_long = HashTable(27 // config.HASH_TABLE_LOAD_FACTOR)
-street_address_to_bearing = HashTable(27 // config.HASH_TABLE_LOAD_FACTOR)
+street_address_to_lat_long = hash_table.HashTable(27 // config.HASH_TABLE_LOAD_FACTOR)
+street_address_to_bearing = hash_table.HashTable(27 // config.HASH_TABLE_LOAD_FACTOR)
 
 Destination = namedtuple('Destination', ['p_id', 'bearing_from_hub', 'distance_from_hub'])
 
 Stop = namedtuple('Stop', ['street_address', 'lat_long', 'bearing_from_hub', 'distance_from_hub'])
-
-
 
 HUB_STOP = Stop(config.HUB_STREET_ADDRESS, config.HUB_LAT_LONG, 0.0, 0.0)
 
@@ -107,7 +104,7 @@ def get_farthest_stop_from_hub(list_of_stops):
     return farthest_stop
 
 
-def get_weighted_center_of_stops(list_of_stops) -> tuple[float, float]:
+def get_weighted_center_of_stops(list_of_stops):
     sum_lat = 0.0
     sum_long = 0.0
     for stop in list_of_stops:
