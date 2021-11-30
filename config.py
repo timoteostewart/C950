@@ -8,7 +8,7 @@ HASH_TABLE_LOAD_FACTOR = 0.75
 MINUTES_PER_MILE = 3.3333 #  = 60 minutes per 18 miles
 MILES_PER_MINUTE = 0.3 # 18 miles per 60 minutes
 HUB_STREET_ADDRESS = '4001 S 700 East'
-HUB_LAT_LONG = (40.685116081559286, -111.86998980967073)
+
 
 # all_packages_by_id_ht = HashTable(40 // HASH_TABLE_LOAD_FACTOR) # 40 distinct packages
 all_packages_by_id = [None] * 41

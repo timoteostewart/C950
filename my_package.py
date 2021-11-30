@@ -4,16 +4,15 @@ from math import dist
 import config
 import my_time
 
-# Package = namedtuple('Package', ['id', 'street_address', 'zip', 'deadline', 'weight_kg', 'notes', 'when_can_leave_hub', 'package_affinities', 'truck_affinity', 'lat_long', 'bearing_from_hub', 'distance_from_hub'])
 
 class Package:
 
     # Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub)
-    def __init__(self, id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub):
+    def __init__(self, id, street_address, zip, deadline_as_offset, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub):
         self.id = id
         self.street_address: str = street_address
         self.zip: str = zip
-        self.deadline: int = deadline
+        self.deadline_as_offset: int = deadline_as_offset
         self.weight_kg: int = weight_kg
         self.notes: str = notes
         self.when_can_leave_hub: int = when_can_leave_hub

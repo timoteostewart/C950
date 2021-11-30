@@ -22,22 +22,20 @@ if __name__ == '__main__':
     eight_oclock_route_2 = route.Route('8am2')
     eight_oclock_route_1, eight_oclock_route_2 = route.populate_two_routes_for_the_given_time('8:00 am')
 
-    print("route 1")
-    # print(eight_oclock_route_1.circuit)
+    # eight_oclock_route_1only = route.Route('8am1only')
+
+    # print("route 1only")
     print(f"required: {sorted([x.id for x in eight_oclock_route_1.manifest_required_packages])}")
     print(f"optional: {sorted([x.id for x in eight_oclock_route_1.manifest_optional_packages])}")
-    print(my_time.convert_minutes_offset_to_time(config.MINUTES_PER_MILE * geo.distance_of_path_of_stops(eight_oclock_route_1.circuit)))
+    # print(my_time.convert_minutes_offset_to_time(config.MINUTES_PER_MILE * geo.distance_of_path_of_stops(eight_oclock_route_1.circuit)))
+    print(route.validate_route(eight_oclock_route_1, '8:00 am', reverse=True))
     
-    print("route 2")
-    print(f"required: {sorted([x.id for x in eight_oclock_route_2.manifest_required_packages])}")
-    print(f"optional: {sorted([x.id for x in eight_oclock_route_2.manifest_optional_packages])}")
-    print(my_time.convert_minutes_offset_to_time(config.MINUTES_PER_MILE * geo.distance_of_path_of_stops(eight_oclock_route_2.circuit)))
+    # print("route 2")
+    # print(f"required: {sorted([x.id for x in eight_oclock_route_2.manifest_required_packages])}")
+    # print(f"optional: {sorted([x.id for x in eight_oclock_route_2.manifest_optional_packages])}")
+    # print(my_time.convert_minutes_offset_to_time(config.MINUTES_PER_MILE * geo.distance_of_path_of_stops(eight_oclock_route_2.circuit)))
 
     eight_oclock_route_1.convert_circuit_to_package_delivery_order()
-    print(eight_oclock_route_1.earliest_bearing)
-    print(eight_oclock_route_1.farthest_stop.street_address)
-    print(eight_oclock_route_1.latest_bearing)
-    # print(config.all_packages_by_id[14].bearing_from_hub)
 
     exit()
 

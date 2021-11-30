@@ -11,7 +11,8 @@ Destination = namedtuple('Destination', ['p_id', 'bearing_from_hub', 'distance_f
 
 Stop = namedtuple('Stop', ['street_address', 'lat_long', 'bearing_from_hub', 'distance_from_hub'])
 
-HUB_STOP = Stop(config.HUB_STREET_ADDRESS, config.HUB_LAT_LONG, 0.0, 0.0)
+HUB_LAT_LONG = (40.685116081559286, -111.86998980967073)
+HUB_STOP = Stop(config.HUB_STREET_ADDRESS, HUB_LAT_LONG, 0.0, 0.0)
 
 def is_bearing_in_angle(bearing, angle1, angle2):
     if angle2 >= angle1:
@@ -26,7 +27,7 @@ def get_angle(bearing1, bearing2):
 
 def return_bearing_from_hub_to_street_address(street_address: str) -> float:
     coords = street_address_to_lat_long.get(street_address)
-    return return_bearing_from_coords1_to_coords2(config.HUB_LAT_LONG, coords)
+    return return_bearing_from_coords1_to_coords2(HUB_LAT_LONG, coords)
 
 
 def return_bearing_from_coords1_to_coords2(coords1, coords2) -> float: # takes coordinates in decimal degrees and returns compass bearing in degrees

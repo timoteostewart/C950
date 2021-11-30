@@ -26,7 +26,6 @@ class HashTable:
         else:
             self.table[bucket].append((key, value))
 
-
     def get(self, key):
         hash_code = HashTable.hash_code(str(key))
         bucket = hash_code % self.capacity
@@ -34,7 +33,6 @@ class HashTable:
             for (K, V) in self.table[bucket]:
                 if K == key:
                     return V
-        return default
 
     def dump(self):
         for bucket in range(0, self.capacity):

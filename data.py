@@ -79,15 +79,16 @@ def ingest_packages():
             street_address = row[1]
             city = row[2]
             zip = str(row[4])
-            deadline = row[5]
+            deadline_as_time = row[5]
+            deadline_as_offset = None # will initialize later
             weight_kg = int(row[6])
             notes = row[7]
 
             # compute deadline
-            if deadline == 'EOD':
-                deadline = 1440 # 1440 minutes = 24 hours * 60 minutes
+            if deadline_as_time == 'EOD':
+                deadline_as_offset = 1440 # 1440 minutes = 24 hours * 60 minutes
             else:
-                deadline = my_time.convert_time_to_minutes_offset(deadline)
+                deadline_as_offset = my_time.convert_time_to_minutes_offset(deadline_as_time)
 
             when_can_leave_hub = 0
             package_affinities = {0}
@@ -128,7 +129,7 @@ def ingest_packages():
             bearing_from_hub = geo.return_bearing_from_hub_to_street_address(street_address)
             distance_from_hub = geo.get_distance(config.HUB_STREET_ADDRESS, street_address)
 
-            cur_package = my_package.Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub)
+            cur_package = my_package.Package(package_id, street_address, zip, deadline_as_offset, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub)
 
             config.all_packages_by_id[package_id] = cur_package
             # config.all_packages_by_zip[zip].append(package_id)
