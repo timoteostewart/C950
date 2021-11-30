@@ -27,7 +27,7 @@ class HashTable:
             self.table[bucket].append((key, value))
 
 
-    def get_or_default(self, key, default):
+    def get(self, key):
         hash_code = HashTable.hash_code(str(key))
         bucket = hash_code % self.capacity
         if self.table[bucket] != None:

@@ -63,7 +63,7 @@ def ingest_distances():
                     # config.distances_between_pairs.add(K, V)
                         
     for street_address in list_of_street_addresses:
-        cur_stop = geo.Stop(street_address, geo.street_address_to_lat_long.get_or_default(street_address, ''), geo.street_address_to_bearing.get_or_default(street_address, ''), geo.get_distance(config.HUB_STREET_ADDRESS, street_address))
+        cur_stop = geo.Stop(street_address, geo.street_address_to_lat_long.get(street_address), geo.street_address_to_bearing.get(street_address), geo.get_distance(config.HUB_STREET_ADDRESS, street_address))
         config.all_stops_by_street_address.add(street_address, cur_stop)
 
 
@@ -99,7 +99,7 @@ def ingest_packages():
                     a = re.search(pattern, notes)
                     if a:
                         # print(f"affinity to truck {a.group(1)}")
-                        truck_affinity = 'truck ' + a.group(1)
+                        truck_affinity = a.group(1)
                 if "Delayed on flight" in notes:
                     # print("is delayed on flight")
                     pattern = r'until ([0-9:\ am]+)'
@@ -124,14 +124,14 @@ def ingest_packages():
                         # a_list.sort()
                         package_affinities = set(a_list)
 
-            lat_long = geo.street_address_to_lat_long.get_or_default(street_address, '')
+            lat_long = geo.street_address_to_lat_long.get(street_address)
             bearing_from_hub = geo.return_bearing_from_hub_to_street_address(street_address)
             distance_from_hub = geo.get_distance(config.HUB_STREET_ADDRESS, street_address)
 
-            current_package = my_package.Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub)
+            cur_package = my_package.Package(package_id, street_address, zip, deadline, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub)
 
-            config.all_packages_by_id[package_id] = current_package
+            config.all_packages_by_id[package_id] = cur_package
             # config.all_packages_by_zip[zip].append(package_id)
             
-            config.packages_at_hub.append(current_package)
+            config.packages_at_hub.append(cur_package)
 

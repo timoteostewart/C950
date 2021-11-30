@@ -20,8 +20,12 @@ def is_bearing_in_angle(bearing, angle1, angle2):
         return bearing >= angle1 or bearing <= angle2
 
 
+def get_angle(bearing1, bearing2):
+    return ((bearing2 + 360) - bearing1) % 360
+
+
 def return_bearing_from_hub_to_street_address(street_address: str) -> float:
-    coords = street_address_to_lat_long.get_or_default(street_address, '')
+    coords = street_address_to_lat_long.get(street_address)
     return return_bearing_from_coords1_to_coords2(config.HUB_LAT_LONG, coords)
 
 
@@ -70,7 +74,7 @@ def haversine_distance(coords1, coords2) -> float: # takes coordinates in decima
 
 def get_distance(street_address1, street_address2):
     # print(f"{street_address1} and {street_address2}")
-    return float(config.distances_between_pairs.get_or_default(f"{street_address1} and {street_address2}", ''))
+    return float(config.distances_between_pairs.get(f"{street_address1} and {street_address2}"))
 
 
 def get_distance_between_stops(stop1, stop2):
@@ -104,12 +108,12 @@ def get_farthest_stop_from_hub(list_of_stops):
     return farthest_stop
 
 
-def get_weighted_center_of_stops(list_of_stops):
+def get_weighted_center_of_objects(list_of_objects):
     sum_lat = 0.0
     sum_long = 0.0
-    for stop in list_of_stops:
+    for stop in list_of_objects:
         sum_lat += stop.lat_long[0]
         sum_long += stop.lat_long[1]
-    avg_lat = sum_lat / len(list_of_stops)
-    avg_long = sum_long / len(list_of_stops)
+    avg_lat = sum_lat / len(list_of_objects)
+    avg_long = sum_long / len(list_of_objects)
     return (avg_lat, avg_long)

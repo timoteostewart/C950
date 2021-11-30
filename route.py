@@ -5,7 +5,10 @@ import my_time
 
 class Route:
 
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
+        self.truck_number = 0
+
         self.package_manifest = []
         self.manifest_all_packages = []
         self.manifest_required_packages = []
@@ -17,11 +20,10 @@ class Route:
         self.path_to_farthest = []
         self.path_from_farthest = []
 
-        self.farthest_stop = ''
+        self.farthest_stop = None
 
         self.earliest_bearing = 0.0
         self.latest_bearing = 0.0
-        # self.bearing_of_farthest_stop = 0.0
 
         self.weighted_center = (0.0, 0.0)
 
@@ -41,9 +43,13 @@ class Route:
             if pkg not in self.manifest_all_packages:
                 if pkg.street_address in existing_addresses:
                     self.add_optional_package(pkg)
+
     
 
     def populate_paths_to_and_from_farthest(self):
+        self.path_to_farthest = [geo.HUB_STOP] + [self.farthest_stop]
+        self.path_from_farthest = [self.farthest_stop] + [geo.HUB_STOP]
+        self.stops_not_yet_added_to_path.remove(self.farthest_stop)
         for cur_stop in list(self.stops_not_yet_added_to_path):
             if geo.is_bearing_in_angle(cur_stop.bearing_from_hub, self.earliest_bearing, self.farthest_stop.bearing_from_hub):
                 cur_least_distance = float('inf')
@@ -71,56 +77,73 @@ class Route:
         self.update_farthest_stop()
         self.populate_paths_to_and_from_farthest()
         self.circuit = self.path_to_farthest + self.path_from_farthest[1:]
-        # print(f"circuit length: {geo.distance_of_path_of_stops(self.circuit)}")
 
-
-    def add_optional_package(self, pkg):
-        self.manifest_optional_packages.append(pkg)
-        self.combine_manifests_required_optional_packages()
-
+    def update_route_bearings_per_new_package(self, pkg):
+        if not geo.is_bearing_in_angle(pkg.bearing_from_hub, self.earliest_bearing, self.latest_bearing):
+            if geo.get_angle(self.latest_bearing, pkg.bearing_from_hub) < geo.get_angle(pkg.bearing_from_hub, self.earliest_bearing):
+                self.latest_bearing = pkg.bearing_from_hub
+            else:
+                self.earliest_bearing = pkg.bearing_from_hub
+        if self.farthest_stop is not None:
+            if pkg.distance_from_hub > self.farthest_stop.distance_from_hub:
+                self.farthest_stop = config.all_stops_by_street_address.get(pkg.street_address)
 
     def add_required_package(self, pkg):
-        self.manifest_required_packages.append(pkg)
-        self.combine_manifests_required_optional_packages()
+        if pkg not in self.manifest_required_packages:
+            self.update_route_bearings_per_new_package(pkg)
+            self.manifest_required_packages.append(pkg)
+            if pkg in config.packages_at_hub:
+                config.packages_at_hub.remove(pkg)
+            self.combine_manifests_required_optional_packages()
 
+    def add_optional_package(self, pkg):
+        if pkg not in self.manifest_optional_packages:
+            self.update_route_bearings_per_new_package(pkg)
+            self.manifest_optional_packages.append(pkg)
+            config.packages_at_hub.remove(pkg)
+            self.combine_manifests_required_optional_packages()
     
     def combine_manifests_required_optional_packages(self):
         self.manifest_all_packages = self.manifest_required_packages + self.manifest_optional_packages
 
-
     def translate_packages_to_stops(self):
         self.combine_manifests_required_optional_packages()
         for street_address in set([x.street_address for x in self.manifest_all_packages]):
-            cur_stop = config.all_stops_by_street_address.get_or_default(street_address, '')
+            cur_stop = config.all_stops_by_street_address.get(street_address)
             if cur_stop not in self.stops_not_yet_added_to_path:
                 self.stops_not_yet_added_to_path.append(cur_stop)
     
     def update_weighted_center(self):
-        self.weighted_center = geo.get_weighted_center_of_stops(self.stops_not_yet_added_to_path)
-        # sort stops not yet added in decreasing distance from weighted center
-        self.stops_not_yet_added_to_path.sort(key=lambda stop: geo.haversine_distance(self.weighted_center, stop.lat_long), reverse=True)
+        self.weighted_center = geo.get_weighted_center_of_objects(self.stops_not_yet_added_to_path)
         
     def update_farthest_stop(self):
+        self.stops_not_yet_added_to_path.sort(key=lambda stop: geo.haversine_distance(self.weighted_center, stop.lat_long), reverse=True)
         self.farthest_stop = self.stops_not_yet_added_to_path[0]
-        self.path_to_farthest = [geo.HUB_STOP] + [self.farthest_stop]
-        self.path_from_farthest = [self.farthest_stop] + [geo.HUB_STOP]
-        self.stops_not_yet_added_to_path.remove(self.farthest_stop)    
-    
-    def add_additional_packages_going_to_existing_stops(self):
-        existing_addresses = {x.street_address for x in self.manifest_required_packages}
-        for pkg in config.pkgs_eight_oclock_all:
-            if pkg not in config.eight_oclock_route_1.manifest_required_packages and pkg not in self.manifest_optional_packages:
-                if pkg.street_address in existing_addresses:
-                    # print(f"pkg id {pkg.id} going to same address as existing package")
-                    self.manifest_optional_packages.append(pkg)
-        self.manifest_all_packages = self.manifest_required_packages + self.manifest_optional_packages
+        
+
+    def convert_circuit_to_package_delivery_order(self):
+        for stop in self.circuit:
+            for pkg in self.manifest_all_packages:
+                if pkg.street_address == stop.street_address:
+                    print(f"{pkg.id} ", end='')
+        print()
+
+    # def update_earliest_and_latest_bearings(self):
+
 
 def populate_two_routes_for_the_given_time(the_time: str):
     
     rush_packages_ready = [x for x in filter(lambda x: x.deadline < 1440 and x.when_can_leave_hub == my_time.convert_time_to_minutes_offset(the_time), config.packages_at_hub)]
+    
     nonrush_packages_ready = [x for x in filter(lambda x: x.deadline == 1440 and x.when_can_leave_hub == my_time.convert_time_to_minutes_offset(the_time), config.packages_at_hub)]
 
-    # 3. create package affinity group
+    seed_packages = []
+    if rush_packages_ready:
+        seed_packages += rush_packages_ready
+    else:
+        seed_packages += nonrush_packages_ready
+
+    # 3.1 create package affinity group
     p_ids_in_affinity = set()
     for pkg in rush_packages_ready:
         if pkg.package_affinities != {0}:
@@ -130,55 +153,124 @@ def populate_two_routes_for_the_given_time(the_time: str):
         if pkg.package_affinities != {0}:
             p_ids_in_affinity.add(pkg.id)
             p_ids_in_affinity.update(pkg.package_affinities)
-    affinity_packages_ready = set()
+    affinity_packages_ready = []
     for p_id in p_ids_in_affinity:
         cur_pkg = config.all_packages_by_id[p_id]
-        affinity_packages_ready.add(cur_pkg)
+        affinity_packages_ready.append(cur_pkg)
+        if cur_pkg in config.packages_at_hub:
+            config.packages_at_hub.remove(cur_pkg)
         if cur_pkg in rush_packages_ready:
             rush_packages_ready.remove(cur_pkg)
         if cur_pkg in nonrush_packages_ready:
             nonrush_packages_ready.remove(cur_pkg)
-    
-    exists_affinity_group = False
-    weighted_center_of_affinity_group = None
+
+    # if any affinity packages are in seed_packages, then all affinity packages must be added to seed_packages
+    exists_package_affinity_group = False
+    affinity_packages_weighted_center = None
     if affinity_packages_ready:
-        exists_affinity_group = True
-        stops = my_package.convert_list_of_packages_to_stops(list(affinity_packages_ready))
-        weighted_center_of_affinity_group = geo.get_weighted_center_of_stops(stops)
-    # print(weighted_center_of_affinity_group)
+        exists_package_affinity_group = True
+        # calculate weighted center of affinity package stops
+        stops = my_package.convert_list_of_packages_to_stops(affinity_packages_ready)
+        affinity_packages_weighted_center = geo.get_weighted_center_of_objects(stops)
+        # determine whether to add affinity packages to seed packages
+        add_affinity_packages_to_seed = False
+        for aff_pkg in affinity_packages_ready:
+            if aff_pkg in seed_packages:
+                add_affinity_packages_to_seed = True
+                break
+        if add_affinity_packages_to_seed:
+            seed_packages += affinity_packages_ready    
+    
+    # # 3.2 create truck affinity group
+    # affinity_truck_ready = []
+    # for pkg in rush_packages_ready:
+    #     if pkg.truck_affinity != 0:
+    #         affinity_truck_ready.add(pkg)
+    #         rush_packages_ready.remove(pkg)
+    # for pkg in nonrush_packages_ready:
+    #     if pkg.truck_affinity != 0:
+    #         affinity_truck_ready.append(pkg)
+    #         nonrush_packages_ready.remove(pkg)
+    # exists_truck_affinity_group = affinity_truck_ready
 
-    # 4. separate rush packages into two clusters
-    rush_packages_ready.sort(key=lambda x: x.bearing_from_hub)
-    earliest_bearing = rush_packages_ready[0].bearing_from_hub
-    latest_bearing = rush_packages_ready[-1].bearing_from_hub
+    # 4. separate seed packages into two sectors
+    seed_packages.sort(key=lambda x: x.bearing_from_hub)
     list_of_angles = []
-    for i, pkg in enumerate(rush_packages_ready):
+    for i, pkg in enumerate(seed_packages):
         cur_bearing = pkg.bearing_from_hub
-        next_bearing = -1 # will initialize in if/else block below
-        if i + 1 == len(rush_packages_ready):
-            next_bearing = rush_packages_ready[0].bearing_from_hub + 360
+        next_bearing = None # will initialize in if/else block below
+        if i + 1 == len(seed_packages):
+            next_bearing = seed_packages[0].bearing_from_hub + 360
         else:
-            next_bearing = rush_packages_ready[i+1].bearing_from_hub
+            next_bearing = seed_packages[i+1].bearing_from_hub
 
-        cur_diff = abs(next_bearing - cur_bearing)
+        cur_diff = next_bearing - cur_bearing
         list_of_angles.append((cur_diff, cur_bearing, next_bearing))
     list_of_angles.sort(key=lambda x: x[0])
     list_of_angles.reverse()
 
-    # 5. add packages in clusters to routes
-    route1 = Route()
-    route2 = Route()
-    for pkg in rush_packages_ready:
+    # 5. add seed packages to routes according to sector
+
+    # but first, remove affinity packages
+    for aff_pkg in affinity_packages_ready:
+        if aff_pkg in seed_packages:
+            seed_packages.remove(aff_pkg)
+
+    route1 = Route('route1')
+    route2 = Route('route2')
+    route1.earliest_bearing = list_of_angles[0][2]
+    route1.latest_bearing = list_of_angles[1][1]
+    route2.earliest_bearing = list_of_angles[1][2]
+    route2.latest_bearing = list_of_angles[0][1]
+    for pkg in seed_packages:
         if geo.is_bearing_in_angle(pkg.bearing_from_hub, list_of_angles[0][2], list_of_angles[1][1]):
             route1.add_required_package(pkg)
         else:
             route2.add_required_package(pkg)
 
-    # 6. add optional packages at existing routes
+    # 6. add optional packages at existing stops
+    # TODO: change this to add them in decreasing order of distance from hub
     route1.add_optional_packages_at_existing_stops(nonrush_packages_ready)
     route2.add_optional_packages_at_existing_stops(nonrush_packages_ready)
 
-    # remove packages on these routes from config.packages_at_hub
+    # 7. add affinity group to route best suited for it, and move stops (and packages) from one route to other as needed to avoid going over package limit
+    route1_weighted_center = geo.get_weighted_center_of_objects(route1.manifest_all_packages)
+    route2_weighted_center = geo.get_weighted_center_of_objects(route2.manifest_all_packages)
+    if geo.haversine_distance(affinity_packages_weighted_center, route1_weighted_center) < geo.haversine_distance(affinity_packages_weighted_center, route2_weighted_center):
+        for pkg in affinity_packages_ready:
+            route1.add_required_package(pkg)
+    else:
+        for pkg in affinity_packages_ready:
+            route2.add_required_package(pkg)
+
+    # 8. validate if either route has too many packages
+    # only packages added should be: rush + same_stop_non_rush + package affinity
+    if len(route1.manifest_all_packages) > 16:
+        overload = len(route1.manifest_all_packages) - 16
+        # find the n packages closest to the hub and remove them from the manifest
+        route1.manifest_optional_packages.sort(key=lambda pkg: geo.haversine_distance(config.HUB_LAT_LONG, pkg.lat_long))
+        for i in range(0, min(overload, len(route1.manifest_optional_packages))):
+            cur_pkg = route1.manifest_optional_packages[0]
+            config.packages_at_hub.append(cur_pkg)
+            route1.manifest_optional_packages.remove(cur_pkg)
+    if len(route2.manifest_all_packages) > 16:
+        overload = len(route2.manifest_all_packages) - 16
+        # find the n packages closest to the hub and remove them from the manifest
+        route2.manifest_optional_packages.sort(key=lambda pkg: geo.haversine_distance(config.HUB_LAT_LONG, pkg.lat_long))
+        for i in range(0, overload):
+            cur_pkg = route2.manifest_optional_packages[0]
+            config.packages_at_hub.append(cur_pkg)
+            route1.manifest_optional_packages.remove(cur_pkg)
+
+  
+
+    route1.translate_packages_to_stops()
+    route2.translate_packages_to_stops()
+    
+    route1.create_circuit()
+    route2.create_circuit()
+
+    # finally, remove packages on these routes from config.packages_at_hub
     for pkg in route1.manifest_all_packages:
         if pkg in config.packages_at_hub:
             config.packages_at_hub.remove(pkg)
@@ -186,9 +278,4 @@ def populate_two_routes_for_the_given_time(the_time: str):
         if pkg in config.packages_at_hub:
             config.packages_at_hub.remove(pkg)
 
-    route1.translate_packages_to_stops()
-    route2.translate_packages_to_stops()
-    
-    route1.create_circuit()
-    route2.create_circuit()
     return (route1, route2)

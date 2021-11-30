@@ -38,5 +38,5 @@ def retrieve_package_ids_able_to_leave_hub(time):
 
 def convert_list_of_packages_to_stops(list_of_packages):
     street_addresses = list(set([x.street_address for x in list_of_packages]))
-    stops = [config.all_stops_by_street_address.get_or_default(x, '') for x in street_addresses]
+    stops = [config.all_stops_by_street_address.get(x) for x in street_addresses]
     return(stops)
