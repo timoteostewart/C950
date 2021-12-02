@@ -17,54 +17,21 @@ if __name__ == '__main__':
     data.ingest_distances()
     data.ingest_packages()
 
-    # 8:00 am
-    eight_oclock_route_1 = route.Route('8am1')
-    eight_oclock_route_2 = route.Route('8am2')
-    eight_oclock_route_1, eight_oclock_route_2 = route.populate_two_routes_for_the_given_time('8:00 am')
 
-    # eight_oclock_route_1only = route.Route('8am1only')
+    first_route, pkgs_remaining = route.populate_one_route('8:00 am', config.packages_at_hub)
+    print(route.validate_route(first_route, '8:00 am', reverse=True))
 
-    # print("route 1only")
-    print(f"required: {sorted([x.id for x in eight_oclock_route_1.manifest_required_packages])}")
-    print(f"optional: {sorted([x.id for x in eight_oclock_route_1.manifest_optional_packages])}")
-    # print(my_time.convert_minutes_offset_to_time(config.MINUTES_PER_MILE * geo.distance_of_path_of_stops(eight_oclock_route_1.circuit)))
-    print(route.validate_route(eight_oclock_route_1, '8:00 am', reverse=True))
-    
-    # print("route 2")
-    # print(f"required: {sorted([x.id for x in eight_oclock_route_2.manifest_required_packages])}")
-    # print(f"optional: {sorted([x.id for x in eight_oclock_route_2.manifest_optional_packages])}")
-    # print(my_time.convert_minutes_offset_to_time(config.MINUTES_PER_MILE * geo.distance_of_path_of_stops(eight_oclock_route_2.circuit)))
+    # second_route, pkgs_remaining = route.populate_one_route_for_a_given_time('8:01 am', pkgs_remaining)
+    # print(route.validate_route(second_route, '8:01 am', reverse=True))
 
-    eight_oclock_route_1.convert_circuit_to_package_delivery_order()
+    third_route, pkgs_remaining = route.populate_one_route('9:05 am', pkgs_remaining)
+    print(route.validate_route(third_route, '9:05 am', reverse=True))
 
-    exit()
+    fourth_route, pkgs_remaining = route.populate_one_route('10:20 am', pkgs_remaining)
+    print(route.validate_route(fourth_route, '10:20 am', reverse=True))
 
-    # 10:20 am
-    ten_twenty_route_1 = route.Route()
-    ten_twenty_route_2 = route.Route()
-    ten_twenty_route_1, ten_twenty_route_2 = route.populate_two_routes_for_the_given_time('10:20 am')
-
-    print("route 1")
-    print(f"required: {sorted([x.id for x in ten_twenty_route_1.manifest_required_packages])}")
-    print(f"optional: {sorted([x.id for x in ten_twenty_route_1.manifest_optional_packages])}")
-    print(my_time.convert_minutes_offset_to_time(140 + config.MINUTES_PER_MILE * geo.distance_of_path_of_stops(ten_twenty_route_1.circuit)))
-    
-    print("route 2")
-    print(f"required: {sorted([x.id for x in ten_twenty_route_2.manifest_required_packages])}")
-    print(f"optional: {sorted([x.id for x in ten_twenty_route_2.manifest_optional_packages])}")
-    print(my_time.convert_minutes_offset_to_time(140 + config.MINUTES_PER_MILE * geo.distance_of_path_of_stops(ten_twenty_route_2.circuit)))
-
-
-
-    
-    # add additional packages
-    # TODO: if we still have room on the truck, then geographically proximate stops could be added to circuit
-
-    # print(len(eight_oclock_route_1.manifest_all_packages))
-    # print(len(eight_oclock_route_1.manifest_optional_packages))
-
-
-
+    print(sorted([pkg.id for pkg in pkgs_remaining]))
+    print(config.cumulative_miles)
     exit()
 
     

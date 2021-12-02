@@ -112,9 +112,9 @@ def get_farthest_stop_from_hub(list_of_stops):
 def get_weighted_center_of_objects(list_of_objects):
     sum_lat = 0.0
     sum_long = 0.0
-    for stop in list_of_objects:
-        sum_lat += stop.lat_long[0]
-        sum_long += stop.lat_long[1]
+    for each_object in list_of_objects:
+        sum_lat += each_object.lat_long[0]
+        sum_long += each_object.lat_long[1]
     avg_lat = sum_lat / len(list_of_objects)
     avg_long = sum_long / len(list_of_objects)
     return (avg_lat, avg_long)

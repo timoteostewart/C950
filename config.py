@@ -16,6 +16,8 @@ all_packages_by_id = [None] * 41
 distances_between_pairs = HashTable(729 // HASH_TABLE_LOAD_FACTOR) # 27 possible stops, so we'll store 729 (= 27²) location pairs
 all_stops_by_street_address = HashTable(27 // HASH_TABLE_LOAD_FACTOR) # 27 possible stops
 
+stops_near_hub = [] # "near" means 3.6 miles from hub or closer
+
 packages_at_hub = []
 packages_delivered = []
 
@@ -24,3 +26,5 @@ master_delivery_log = []
 hub_stats_miles = 0.0
 
 pkgs_eight_oclock_all = None
+
+cumulative_miles = 0

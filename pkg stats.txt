@@ -1,0 +1,41 @@
+rush non-affinity (7)
+1
+29
+30
+31
+34
+37
+40
+
+rush affinity (1)
+13
+14
+15
+16
+20
+
+nonrush affinity (1)
+19
+
+co-located packages with these (need to keep 3 and remove 4) -- 7 pkgs
+7 - keep since it's remote. (I.)
+39 - keep since it's remote. (I.)
+8 - take off since we'll visit later to deliver 9. (I.)
+4 - take off since it's close to hub
+21 - take off since it's close to hub
+5 - take off since it's close to a future delivery
+38 - take off since it's close to a future delivery
+
+
+(total: 20)
+
+
+
+When adding optional packages:
+I. add nonrush affinity group if its weighted center is near weighted center of route and there's space on the manifest
+II. add packages to existing stops
+III. add remote packages (1.5 miles or more to nearest future stop)
+
+When removing optional packages:
+I. remove packages at future stops
+II. remove packages to stops near hub (3.6 miles away or closer)

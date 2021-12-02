@@ -16,29 +16,29 @@ distances_ht = hash_table.HashTable(int(351 // HASH_TABLE_LOAD_FACTOR)) # there 
 
 
 def ingest_distances():
-
+    # populate list_of_locations
     list_of_street_addresses = []
-
-    # populate `list_of_locations`
     with open('WGUPS Distance Table.csv') as csvfile:
         distances = csv.reader(csvfile, delimiter=',')
         for row in distances:
             if row[0] != '' and row[1] != '' and ord(row[0][0]) <= 90:
+                # populate list_of_street_addresses
                 street_address = row[1]
-                street_address = street_address[:-8] # strip out trailing parenthetical zip code
+                street_address = street_address[:-8] # truncate parenthetical zip code
                 list_of_street_addresses.append(street_address)
+                # populate geo.street_address_to_lat_long
                 lat_long = (float(row[29]), float(row[30]))
                 geo.street_address_to_lat_long.add(street_address, lat_long)
+                # populate geo.street_address_to_bearing
                 bearing_from_hub = geo.return_bearing_from_hub_to_street_address(street_address)
                 geo.street_address_to_bearing.add(street_address, bearing_from_hub)
 
-    # populate `config.distances_between_pairs`
+    # populate config.distances_between_pairs
     with open('WGUPS Distance Table.csv') as csvfile:
         distances = csv.reader(csvfile, delimiter=',')
         cur_row = 0
         for row in distances:
             if row[0] != '' and row[1] != '' and ord(row[0][0]) <= 90:
-                    
                 left_location = list_of_street_addresses[cur_row]
                 cur_row += 1
 
@@ -46,25 +46,23 @@ def ingest_distances():
                     distance = row[col]
                     if distance == '':
                         continue
-                    
                     right_location = list_of_street_addresses[col - 2]
-
                     K = f"{left_location} and {right_location}"
                     V = distance
-
                     if left_location == right_location:
                         config.distances_between_pairs.add(K, V)
                     else:
                         K2 = f"{right_location} and {left_location}"
                         config.distances_between_pairs.add(K, V)
                         config.distances_between_pairs.add(K2, V)
-                    
-                    # print(f"{left_location} and {right_location}: {distance} ", end='\n')
-                    # config.distances_between_pairs.add(K, V)
                         
     for street_address in list_of_street_addresses:
+        # populate config.all_stops_by_street_address
         cur_stop = geo.Stop(street_address, geo.street_address_to_lat_long.get(street_address), geo.street_address_to_bearing.get(street_address), geo.get_distance(config.HUB_STREET_ADDRESS, street_address))
         config.all_stops_by_street_address.add(street_address, cur_stop)
+        # populate config.stops_near_hub
+        if cur_stop.distance_from_hub <= 3.6:
+            config.stops_near_hub.append(cur_stop)
 
 
 def ingest_packages():
