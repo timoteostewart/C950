@@ -28,3 +28,9 @@ hub_stats_miles = 0.0
 pkgs_eight_oclock_all = None
 
 cumulative_miles = 0
+
+route_lists = []
+
+count = 0
+
+failed_route_lists = 0

@@ -90,7 +90,7 @@ def ingest_packages():
 
             when_can_leave_hub = 0
             package_affinities = {0}
-            truck_affinity = 0
+            truck_affinity = 0 # the number of the truck
 
             if notes:
                 if "Can only be on truck" in notes:
@@ -98,7 +98,7 @@ def ingest_packages():
                     a = re.search(pattern, notes)
                     if a:
                         # print(f"affinity to truck {a.group(1)}")
-                        truck_affinity = a.group(1)
+                        truck_affinity = int(a.group(1))
                 if "Delayed on flight" in notes:
                     # print("is delayed on flight")
                     pattern = r'until ([0-9:\ am]+)'

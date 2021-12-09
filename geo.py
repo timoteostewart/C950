@@ -109,7 +109,7 @@ def get_farthest_stop_from_hub(list_of_stops):
     return farthest_stop
 
 
-def get_weighted_center_of_objects(list_of_objects):
+def get_centroid_of_objects(list_of_objects):
     sum_lat = 0.0
     sum_long = 0.0
     for each_object in list_of_objects:
