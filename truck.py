@@ -59,7 +59,7 @@ class Truck:
             pass
         else: # at least 1 package
             first_address = config.all_packages_by_id[self.bill_of_lading[0]].street_address
-            self.distance_on_road_this_run += geo.get_distance(config.HUB_STREET_ADDRESS, first_address)
+            self.distance_on_road_this_run += geo.get_distance(geo.HUB_STREET_ADDRESS, first_address)
             self.add_package_to_delivery_log(self.bill_of_lading[0])
 
             if len(self.bill_of_lading) == 1: # exactly 1 package
@@ -73,7 +73,7 @@ class Truck:
 
             # return to hub
             last_address = config.all_packages_by_id[self.bill_of_lading[-1]].street_address
-            self.distance_on_road_this_run += geo.get_distance(last_address, config.HUB_STREET_ADDRESS)
+            self.distance_on_road_this_run += geo.get_distance(last_address, geo.HUB_STREET_ADDRESS)
                 
 
         self.time_on_road_this_run = self.distance_on_road_this_run * self.MINUTES_PER_MILE

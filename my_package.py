@@ -15,7 +15,7 @@ class Package:
         self.deadline_as_offset: int = deadline_as_offset
         self.weight_kg: int = weight_kg
         self.notes: str = notes
-        self.when_can_leave_hub: int = when_can_leave_hub
+        self.when_can_leave_hub_as_offset: int = when_can_leave_hub
         self.package_affinities = package_affinities
         self.truck_affinity: str = truck_affinity
         self.lat_long = lat_long
@@ -30,7 +30,7 @@ class Package:
         return f"id {self.id}, lat_long {self.lat_long}"
 
     def deep_copy(self):
-        new_package = Package(self.id, self.street_address, self.zip, self.deadline_as_offset, self.weight_kg, self.notes, self.when_can_leave_hub, self.package_affinities, self.truck_affinity, self.lat_long, self.bearing_from_hub, self.distance_from_hub)
+        new_package = Package(self.id, self.street_address, self.zip, self.deadline_as_offset, self.weight_kg, self.notes, self.when_can_leave_hub_as_offset, self.package_affinities, self.truck_affinity, self.lat_long, self.bearing_from_hub, self.distance_from_hub)
         return new_package
 
 

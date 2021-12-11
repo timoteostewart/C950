@@ -58,7 +58,7 @@ def ingest_distances():
                         
     for street_address in list_of_street_addresses:
         # populate config.all_stops_by_street_address
-        cur_stop = geo.Stop(street_address, geo.street_address_to_lat_long.get(street_address), geo.street_address_to_bearing.get(street_address), geo.get_distance(config.HUB_STREET_ADDRESS, street_address))
+        cur_stop = geo.Stop(street_address, geo.street_address_to_lat_long.get(street_address), geo.street_address_to_bearing.get(street_address), geo.get_distance(geo.HUB_STREET_ADDRESS, street_address))
         config.all_stops_by_street_address.add(street_address, cur_stop)
         # populate config.stops_near_hub
         if cur_stop.distance_from_hub <= 3.6:
@@ -125,7 +125,7 @@ def ingest_packages():
 
             lat_long = geo.street_address_to_lat_long.get(street_address)
             bearing_from_hub = geo.return_bearing_from_hub_to_street_address(street_address)
-            distance_from_hub = geo.get_distance(config.HUB_STREET_ADDRESS, street_address)
+            distance_from_hub = geo.get_distance(geo.HUB_STREET_ADDRESS, street_address)
 
             cur_package = my_package.Package(package_id, street_address, zip, deadline_as_offset, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub)
 

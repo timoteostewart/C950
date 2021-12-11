@@ -12,7 +12,11 @@ Destination = namedtuple('Destination', ['p_id', 'bearing_from_hub', 'distance_f
 Stop = namedtuple('Stop', ['street_address', 'lat_long', 'bearing_from_hub', 'distance_from_hub'])
 
 HUB_LAT_LONG = (40.685116081559286, -111.86998980967073)
-HUB_STOP = Stop(config.HUB_STREET_ADDRESS, HUB_LAT_LONG, 0.0, 0.0)
+HUB_STREET_ADDRESS = '4001 S 700 East'
+HUB_STOP = Stop(HUB_STREET_ADDRESS, HUB_LAT_LONG, 0.0, 0.0)
+
+NORTH_POLE_LAT_LONG = (90.0, 135.0)
+NORTH_POLE_STOP = Stop('', NORTH_POLE_LAT_LONG, 0.0, 2169.0)
 
 def is_bearing_in_angle(bearing, angle1, angle2):
     if angle2 >= angle1:
@@ -102,17 +106,25 @@ def get_farthest_stop_from_hub(list_of_stops):
     greatest_distance = 0.0
     farthest_stop = ''
     for stop in list_of_stops:
-        cur_distance = get_distance(config.HUB_STREET_ADDRESS, stop)
+        cur_distance = get_distance(HUB_STREET_ADDRESS, stop)
         if cur_distance > greatest_distance:
             greatest_distance = cur_distance
             farthest_stop = stop
     return farthest_stop
 
 
-def get_centroid_of_objects(list_of_objects):
+def get_centroid_of_objects(list_of_objects, exclude_hub=False):
+    if len(list_of_objects) == 0:
+        return None
+
     sum_lat = 0.0
     sum_long = 0.0
     for each_object in list_of_objects:
+
+        if exclude_hub:
+            if each_object.lat_long == HUB_LAT_LONG:
+                continue
+
         sum_lat += each_object.lat_long[0]
         sum_long += each_object.lat_long[1]
     avg_lat = sum_lat / len(list_of_objects)

@@ -12,13 +12,14 @@ import geo
 import my_package
 import my_time
 import route
-from route import populate_one_route as populate_one_route
+from route import RouteList, new_pop1 as new_pop1
 from route import populate_two_routes as populate_two_routes
 from route import new_pop2 as new_pop2
 import truck
 
 def solver(first_departure_time, packages_at_hub):
-    solver_helper(route.RouteList(), my_time.convert_time_to_minutes_offset(first_departure_time), list(packages_at_hub))
+    empty_route_list = RouteList()
+    solver_helper(empty_route_list, my_time.convert_time_to_minutes_offset(first_departure_time), list(packages_at_hub))
     print(f"found {len(config.route_lists)} routes")
     config.route_lists.sort(key=lambda route_list: route_list.cumulative_mileage)
     if config.route_lists:
@@ -29,39 +30,34 @@ def solver(first_departure_time, packages_at_hub):
 
 def solver_helper(route_list, current_time_as_offset, packages_at_hub):
 
-    
-
-    # packages_at_hub_copy = list(packages_at_hub)
-
     # base case; guard clauses
     # calculate route_list's cumulative mileage
     cumulative_mileage = 0.0
     number_of_packages_delivered = 0
     for route in route_list.routes:
         cumulative_mileage += route.distance_traveled_in_miles
-        number_of_packages_delivered += len(route.list_of_packages)
+        number_of_packages_delivered += len(route.package_manifest)
     route_list.cumulative_mileage = cumulative_mileage
     route_list.number_of_packages_delivered = number_of_packages_delivered
 
-    route_list_copy = route_list.deep_copy()
-    packages_at_hub_copy = list(packages_at_hub)
-
-    print(f"entered solver helper with mileage {route_list.cumulative_mileage} and packages {len(packages_at_hub)}")
-
-    if route_list_copy.cumulative_mileage > 250:
+    if route_list.cumulative_mileage > 250:
         config.failed_route_lists += 1
         return # discard this route_list
-    
-    # see if we're out of packages
-    if len(packages_at_hub) == 0:
-        config.route_lists.append(route_list)
-        return
     
     # see if we've taken more than 8 hours:
     if current_time_as_offset > 480:
         config.failed_route_lists += 1
         return # discard this route_list
 
+    print(f"entered solver helper with mileage {route_list.cumulative_mileage} and packages {len(packages_at_hub)}")
+
+    route_list_copy = route_list.deep_copy()
+    packages_at_hub_copy = list(packages_at_hub)
+
+    # see if we're out of packages
+    if len(packages_at_hub) == 0:
+        config.route_lists.append(route_list)
+        return
 
     # compute truck_availability and some times_of_future_interest
     trucks_unavailable = []
@@ -73,19 +69,18 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
                 trucks_unavailable.append(cur_route.truck_name)
                 future_times_of_interest.append(cur_route.return_time_as_offset)
     elif len(route_list_copy.routes) == 1:
-        cur_route = route_list_copy.routes[0]
+        cur_route = route_list_copy.routes[-1]
         if cur_route.return_time_as_offset > current_time_as_offset:
             trucks_unavailable.append(cur_route.truck_name)
             future_times_of_interest.append(cur_route.return_time_as_offset)
 
     # find remaining times_of_future_interest and sort them
     for pkg in packages_at_hub:
-        if pkg.when_can_leave_hub > current_time_as_offset:
-            future_times_of_interest.append(pkg.when_can_leave_hub)
+        if pkg.when_can_leave_hub_as_offset > current_time_as_offset:
+            future_times_of_interest.append(pkg.when_can_leave_hub_as_offset)
     future_times_of_interest.sort()
 
-    if not future_times_of_interest:
-        # print(f"no future times of interest, and {len(packages_at_hub)} packages at hub")
+    if not future_times_of_interest: # if we have no future times of interest, set an arbitrary one 4 hours in the future
         future_times_of_interest = [current_time_as_offset + 240]
     
     # recursive cases
@@ -95,14 +90,14 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
 
     # send one truck now (truck 1)
     if 'truck 1' not in trucks_unavailable:
-        result = populate_one_route(current_time_as_offset, packages_at_hub_copy, 'truck 1')
+        result = new_pop1(current_time_as_offset, packages_at_hub_copy, 'truck 1')
         rl = route_list.deep_copy()
         rl.routes.append(result[0])
         solver_helper(rl, future_times_of_interest[0], list(result[1]))
 
     # send one truck now (truck 2)
     if 'truck 2' not in trucks_unavailable:
-        result = populate_one_route(current_time_as_offset, packages_at_hub_copy, 'truck 2')
+        result = new_pop1(current_time_as_offset, packages_at_hub_copy, 'truck 2')
         rl = route_list.deep_copy()
         rl.routes.append(result[0])
         solver_helper(rl, future_times_of_interest[0], list(result[1]))
@@ -115,8 +110,9 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
         rl.routes.append(result[0][0])
         rl.routes.append(result[0][1])
         solver_helper(rl, future_times_of_interest[0], list(result[1]))
+        
         # send them as truck 2 and truck 1
-        result = populate_two_routes(current_time_as_offset, packages_at_hub_copy, ['truck 2', 'truck 1'])
+        result = new_pop2(current_time_as_offset, packages_at_hub_copy, ['truck 2', 'truck 1'])
         rl = route_list.deep_copy()
         rl.routes.append(result[0][0])
         rl.routes.append(result[0][1])
