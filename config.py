@@ -34,3 +34,20 @@ route_lists = []
 count = 0
 
 failed_route_lists = 0
+
+failure_reasons = {}
+failure_reasons['took too long'] = 0
+failure_reasons['late packages'] = 0
+failure_reasons['route mileage too high'] = 0
+failure_reasons['route mileage infinite'] = 0
+failure_reasons['did not beat current winner'] = 0
+
+route_lists_that_hit_zero_pkgs = 0
+
+forty = [0] * 41
+came_in_left_with_1 = [list(forty)] * 41
+came_in_left_with_2 = [list(forty)] * 41
+
+fewest_packages_seen = 40
+
+found_a_solution = False

@@ -48,7 +48,7 @@ def ingest_distances():
                         continue
                     right_location = list_of_street_addresses[col - 2]
                     K = f"{left_location} and {right_location}"
-                    V = distance
+                    V = float(distance)
                     if left_location == right_location:
                         config.distances_between_pairs.add(K, V)
                     else:
@@ -90,15 +90,15 @@ def ingest_packages():
 
             when_can_leave_hub = 0
             package_affinities = {0}
-            truck_affinity = 0 # the number of the truck
+            truck_affinity = '' # format is: 'truck 1' or 'truck 2'
 
             if notes:
                 if "Can only be on truck" in notes:
-                    pattern = r'truck ([\d]+)'
+                    pattern = r'(truck [\d]+)'
                     a = re.search(pattern, notes)
                     if a:
                         # print(f"affinity to truck {a.group(1)}")
-                        truck_affinity = int(a.group(1))
+                        truck_affinity = str(a.group(1))
                 if "Delayed on flight" in notes:
                     # print("is delayed on flight")
                     pattern = r'until ([0-9:\ am]+)'

@@ -18,11 +18,11 @@ HUB_STOP = Stop(HUB_STREET_ADDRESS, HUB_LAT_LONG, 0.0, 0.0)
 NORTH_POLE_LAT_LONG = (90.0, 135.0)
 NORTH_POLE_STOP = Stop('', NORTH_POLE_LAT_LONG, 0.0, 2169.0)
 
-def is_bearing_in_angle(bearing, angle1, angle2):
-    if angle2 >= angle1:
-        return bearing >= angle1 and bearing <= angle2
+def is_bearing_in_angle(bearing, angle_early_bearing, angle_late_bearing):
+    if angle_late_bearing >= angle_early_bearing:
+        return bearing >= angle_early_bearing and bearing <= angle_late_bearing
     else:
-        return bearing >= angle1 or bearing <= angle2
+        return bearing >= angle_early_bearing or bearing <= angle_late_bearing
 
 
 def get_angle(bearing1, bearing2):

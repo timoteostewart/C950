@@ -17,7 +17,7 @@ class Package:
         self.notes: str = notes
         self.when_can_leave_hub_as_offset: int = when_can_leave_hub
         self.package_affinities = package_affinities
-        self.truck_affinity: str = truck_affinity
+        self.truck_affinity: str = truck_affinity # format is: 'truck 1' or 'truck 2'
         self.lat_long = lat_long
         self.bearing_from_hub: float = bearing_from_hub
         self.distance_from_hub: float = distance_from_hub
@@ -33,13 +33,3 @@ class Package:
         new_package = Package(self.id, self.street_address, self.zip, self.deadline_as_offset, self.weight_kg, self.notes, self.when_can_leave_hub_as_offset, self.package_affinities, self.truck_affinity, self.lat_long, self.bearing_from_hub, self.distance_from_hub)
         return new_package
 
-
-def retrieve_package_ids_able_to_leave_hub(time):
-    offset = my_time.convert_time_to_minutes_offset(time)
-    return [p_id for p_id in config.packages_at_hub if config.all_packages_by_id[p_id].when_can_leave_hub <= offset]
-
-
-def convert_list_of_packages_to_stops(list_of_packages):
-    street_addresses = list(set([x.street_address for x in list_of_packages]))
-    stops = [config.all_stops_by_street_address.get(x) for x in street_addresses]
-    return(stops)
