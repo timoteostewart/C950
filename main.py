@@ -1,18 +1,10 @@
 # {student_name: "Tim Stewart", student_id: "001476583"}
 
-from copy import copy
-from copy import deepcopy
-from functools import reduce
-from math import ceil
-from operator import attrgetter, index
-from os import closerange
+import math
 
 import config
 import data
-import geo
-import my_package
 import my_time
-from my_utils import get_permutations as get_permutations
 import route
 from route import RouteList
 from route import pop1_v3 as pop1_v3
@@ -31,15 +23,11 @@ def solver(first_departure_time, packages_at_hub):
 
 def solver_helper(route_list, current_time_as_offset, packages_at_hub):
 
-    if config.found_a_solution:
-        return
-
     # update route_list's cumulative mileage
     cumulative_mileage = 0.0
     number_of_packages_delivered = 0
     for route in route_list.routes:
         if route.any_package_late:
-            config.failure_reasons['late packages'] += 1
             return # discard this route_list since it contains late package(s)
         cumulative_mileage += route.distance_traveled_in_miles
         number_of_packages_delivered += len(route.package_manifest)
@@ -47,27 +35,20 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
     route_list.number_of_packages_delivered = number_of_packages_delivered
 
     if route_list and route_list.cumulative_mileage > 140:
-        config.failure_reasons['route mileage too high'] += 1
         return # discard this route_list
     
     if config.route_lists and route_list.cumulative_mileage > config.route_lists[0].cumulative_mileage:
-        config.failure_reasons['did not beat current winner'] += 1
         return # discard this route_list
 
     # see if we've taken too long
     if current_time_as_offset > 600:
-        config.failure_reasons['took too long'] += 1
         return # discard this route_list
 
     # see if we're out of packages
     if len(packages_at_hub) == 0:
-        config.route_lists_that_hit_zero_pkgs += 1
         config.route_lists.append(route_list)
         config.route_lists.sort(key=lambda rl: rl.cumulative_mileage)
-        # config.found_a_solution = True
         return
-
-    # print(f"entered solver helper with {len(route_list.routes)} routes, cumulative mileage of {route_list.cumulative_mileage}, and {len(packages_at_hub)} packages")
 
     # compute truck_availability and related times_of_future_interest
     trucks_unavailable = []
@@ -131,10 +112,10 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
 
 def print_delivery_schedule(route_list):
     if not route_list:
-        print("route_list is empty!")
+        print("This route_list is empty!")
         return
+    
     for route in route_list.routes:
-        
         cur_time = route.departure_time_as_offset
         for i, v in enumerate(route.ordered_list_of_stops):
             if i == 0:
@@ -142,7 +123,7 @@ def print_delivery_schedule(route_list):
             prev_stop = route.ordered_list_of_stops[i-1]
             cur_stop = route.ordered_list_of_stops[i]
             leg_distance = config.distances_between_pairs.get(f"{prev_stop.street_address} and {cur_stop.street_address}")
-            leg_time = ceil(leg_distance * config.MINUTES_PER_MILE) # round up to next minute
+            leg_time = int(math.ceil(leg_distance * config.MINUTES_PER_MILE)) # round time up to next minute
             cur_time += leg_time
             for pkg in route.package_manifest:
                 if pkg.street_address == cur_stop.street_address:
@@ -155,44 +136,18 @@ def print_delivery_schedule(route_list):
                     else:
                         print("")
 
-            
-
-
 
 if __name__ == '__main__':
-
     data.ingest_distances()
-    data.ingest_packages()
+    packages_at_hub = data.ingest_packages()
 
-    winner = solver('8:00 am', list(config.packages_at_hub))
+    winner = solver('8:00 am', list(packages_at_hub))
+    
     if winner:
         print(f"traveled {winner.cumulative_mileage} miles and delivered {winner.number_of_packages_delivered} packages")
         for route in winner.routes:
-            print(f"{route}  ", end='')
+            print(f"{route}, packages: ", end='')
             route.convert_ordered_list_of_stops_to_package_delivery_order()
             # print("")
-    
-    # for i in range(0, 41):
-    #     for j in range(0, 41):
-    #         val = config.came_in_left_with_1[i][j]
-    #         if val != 0:
-    #             if i == j:
-    #                 print(f"pop1 ** came in with {i}, left with same number: {val} times")
-
-    # for i in range(0, 41):
-    #     for j in range(0, 41):
-    #         val = config.came_in_left_with_2[i][j]
-    #         if val != 0:
-    #             if i == j:
-    #                 print(f"pop2 ** came in with {i}, left with same number: {val} times")
-
-    # print(f"{config.route_lists_that_hit_zero_pkgs} reached 0 pkgs")
-    # print(config.failure_reasons)
 
     print_delivery_schedule(winner)
-
-    for route_list in config.route_lists:
-        print(f"{len(route_list.routes)} {route_list.cumulative_mileage}")
-
-    
-    

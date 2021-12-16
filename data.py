@@ -3,17 +3,8 @@ import re
 
 import config
 import geo
-import hash_table
 import my_package
 import my_time
-
-# declare hash tables
-HASH_TABLE_LOAD_FACTOR = 0.75 # plan is for hash tables to use up to 75% of their maximum capacity
-all_addresses_ht = hash_table.HashTable(int(26 // HASH_TABLE_LOAD_FACTOR)) # there are 26 street addresses
-all_packages_ht = hash_table.HashTable(int(40 // HASH_TABLE_LOAD_FACTOR)) # there are 40 packages
-distances_ht = hash_table.HashTable(int(351 // HASH_TABLE_LOAD_FACTOR)) # there are 351 location pairs; hash table unit is miles
-# travel_time_ht = hash_table.HashTable(int(351 // HASH_TABLE_LOAD_FACTOR)) # 351 location pairs; hash table unit is minutes of travel time
-
 
 def ingest_distances():
     # populate list_of_locations
@@ -26,12 +17,6 @@ def ingest_distances():
                 street_address = row[1]
                 street_address = street_address[:-8] # truncate parenthetical zip code
                 list_of_street_addresses.append(street_address)
-                # populate geo.street_address_to_lat_long
-                lat_long = (float(row[29]), float(row[30]))
-                geo.street_address_to_lat_long.add(street_address, lat_long)
-                # populate geo.street_address_to_bearing
-                bearing_from_hub = geo.return_bearing_from_hub_to_street_address(street_address)
-                geo.street_address_to_bearing.add(street_address, bearing_from_hub)
 
     # populate config.distances_between_pairs
     with open('WGUPS Distance Table.csv') as csvfile:
@@ -58,14 +43,12 @@ def ingest_distances():
                         
     for street_address in list_of_street_addresses:
         # populate config.all_stops_by_street_address
-        cur_stop = geo.Stop(street_address, geo.street_address_to_lat_long.get(street_address), geo.street_address_to_bearing.get(street_address), geo.get_distance(geo.HUB_STREET_ADDRESS, street_address))
+        cur_stop = geo.Stop(street_address, geo.get_distance(geo.HUB_STREET_ADDRESS, street_address))
         config.all_stops_by_street_address.add(street_address, cur_stop)
-        # populate config.stops_near_hub
-        if cur_stop.distance_from_hub <= 3.6:
-            config.stops_near_hub.append(cur_stop)
 
 
 def ingest_packages():
+    packages_at_hub = []
     with open('WGUPS Package File.csv') as csvfile:
         distances = csv.reader(csvfile, delimiter=',')
         for row in distances:
@@ -97,21 +80,17 @@ def ingest_packages():
                     pattern = r'(truck [\d]+)'
                     a = re.search(pattern, notes)
                     if a:
-                        # print(f"affinity to truck {a.group(1)}")
                         truck_affinity = str(a.group(1))
                 if "Delayed on flight" in notes:
-                    # print("is delayed on flight")
                     pattern = r'until ([0-9:\ am]+)'
                     a = re.search(pattern, notes)
                     if a:
-                        # print(f"late flight; delayed until {a.group(1)}")
                         when_can_leave_hub = my_time.convert_time_to_minutes_offset(a.group(1))
                 if "Wrong address listed" in notes:
                     # print("is on hold at hub")
                     pattern = r'until ([0-9:\ am]+)'
                     a = re.search(pattern, notes)
                     if a:
-                        # print(f"wrong address; delayed until {a.group(1)}")
                         when_can_leave_hub = my_time.convert_time_to_minutes_offset(a.group(1))
                 if "Must be delivered with" in notes:
                     pattern = r'\b([\d]+)\b'
@@ -120,17 +99,15 @@ def ingest_packages():
                         a_list = [package_id]
                         for num in a:
                             a_list.append(int(num))
-                        # a_list.sort()
                         package_affinities = set(a_list)
 
-            lat_long = geo.street_address_to_lat_long.get(street_address)
-            bearing_from_hub = geo.return_bearing_from_hub_to_street_address(street_address)
             distance_from_hub = geo.get_distance(geo.HUB_STREET_ADDRESS, street_address)
 
-            cur_package = my_package.Package(package_id, street_address, zip, deadline_as_offset, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, lat_long, bearing_from_hub, distance_from_hub)
+            cur_package = my_package.Package(package_id, street_address, zip, deadline_as_offset, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, distance_from_hub)
 
             config.all_packages_by_id[package_id] = cur_package
-            # config.all_packages_by_zip[zip].append(package_id)
             
-            config.packages_at_hub.append(cur_package)
+            packages_at_hub.append(cur_package)
+    
+    return packages_at_hub
 

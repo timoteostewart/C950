@@ -26,8 +26,3 @@ def convert_minutes_offset_to_time(offset_in_minutes):
         return f"{clock_hours}:0{clock_minutes} {ampm}"
     else:
         return f"{clock_hours}:{clock_minutes} {ampm}"
-
-def add_minutes_to_clock_time(clock_time, duration_in_minutes):
-    start_offset = convert_time_to_minutes_offset(clock_time)
-    end_offset = start_offset + duration_in_minutes
-    return convert_minutes_offset_to_time(end_offset)
