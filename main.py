@@ -7,8 +7,8 @@ import data
 import my_time
 import route
 from route import RouteList
-from route import pop1_v3 as pop1_v3
-from route import pop2_v4 as pop2_v4
+from route import populate_1_route as populate_1_route
+from route import populate_2_routes as populate_2_routes
 
 def solver(first_departure_time, packages_at_hub):
     empty_route_list = RouteList()
@@ -75,14 +75,14 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
 
     # send one truck now (truck 1)
     if 'truck 1' not in trucks_unavailable:
-        result = pop1_v3(current_time_as_offset, list(packages_at_hub), 'truck 1')
+        result = populate_1_route(current_time_as_offset, list(packages_at_hub), 'truck 1')
         rl = route_list.deep_copy()
         rl.routes.append(result[0][0])
         solver_helper(rl, future_times_of_interest[0], list(result[1]))
 
     # send one truck now (truck 2)
     if 'truck 2' not in trucks_unavailable:
-        result = pop1_v3(current_time_as_offset, list(packages_at_hub), 'truck 2')
+        result = populate_1_route(current_time_as_offset, list(packages_at_hub), 'truck 2')
         rl = route_list.deep_copy()
         rl.routes.append(result[0][0])
         solver_helper(rl, future_times_of_interest[0], list(result[1]))
@@ -90,7 +90,7 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
     # # send two trucks now
     if not trucks_unavailable:
         # send them as truck 1 and truck 2
-        result = pop2_v4(current_time_as_offset, list(packages_at_hub), ['truck 1', 'truck 2'])
+        result = populate_2_routes(current_time_as_offset, list(packages_at_hub), ['truck 1', 'truck 2'])
         rl = route_list.deep_copy()
         if len(result[0]) == 1:
             rl.routes.append(result[0][0])
@@ -100,7 +100,7 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
         solver_helper(rl, future_times_of_interest[0], list(result[1]))
         
         # send them as truck 2 and truck 1
-        result = pop2_v4(current_time_as_offset, list(packages_at_hub), ['truck 2', 'truck 1'])
+        result = populate_2_routes(current_time_as_offset, list(packages_at_hub), ['truck 2', 'truck 1'])
         rl = route_list.deep_copy()
         if len(result[0]) == 1:
             rl.routes.append(result[0][0])

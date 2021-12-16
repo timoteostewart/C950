@@ -1,10 +1,8 @@
-# import copy
 from dataclasses import dataclass
 import math
 
 import config
 import geo
-# import my_package
 import my_time
 
 class Route:
@@ -39,7 +37,7 @@ class Route:
         return new_route
 
 
-    def load_package_v2(self, pkg, packages_at_hub):
+    def load_package(self, pkg, packages_at_hub):
         if pkg not in self.package_manifest:
             self.package_manifest.append(pkg)
         if pkg in packages_at_hub:
@@ -48,7 +46,7 @@ class Route:
         self.update_route_stats()
 
 
-    def unload_package_v2(self, pkg, packages_at_hub):
+    def unload_package(self, pkg, packages_at_hub):
         if pkg in self.package_manifest:
             self.package_manifest.remove(pkg)
         if pkg not in packages_at_hub:
@@ -97,9 +95,9 @@ class Route:
             self.return_time_as_offset = self.departure_time_as_offset
             return
 
-        # to be updated:    any_package_late: bool
-        #                   distance_traveled_in_miles: float
-        #                   return_time_as_offset: int
+        # to be updated:    self.any_package_late: bool
+        #                   self.distance_traveled_in_miles: float
+        #                   self.return_time_as_offset: int
         
         self.any_package_late = False
         cur_time_as_offset = self.departure_time_as_offset
@@ -162,9 +160,8 @@ def update_rush_nonrush_packages_views(departure_time_as_offset, packages_at_hub
     return eligible_rush_packages, eligible_nonrush_packages
 
 
-def pop1_v3(departure_time_as_offset: int, packages_at_hub, truck_name):
+def populate_1_route(departure_time_as_offset: int, packages_at_hub, truck_name):
     packages_at_hub = list(packages_at_hub) # make a copy
-    orig_num_pkgs = len(packages_at_hub)
 
     route1 = Route('route1', departure_time_as_offset)
     route1.truck_name = truck_name
@@ -179,27 +176,25 @@ def pop1_v3(departure_time_as_offset: int, packages_at_hub, truck_name):
         cur_pkg = eligible_rush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != truck_name:
             continue
-        route1.load_package_v2(cur_pkg, packages_at_hub)
+        route1.load_package(cur_pkg, packages_at_hub)
         if route1.any_package_late:
-            route1.unload_package_v2(cur_pkg, packages_at_hub)
+            route1.unload_package(cur_pkg, packages_at_hub)
             break
     
     while eligible_nonrush_packages and len(route1.package_manifest) < 16:
         cur_pkg = eligible_nonrush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != truck_name:
             continue
-        route1.load_package_v2(cur_pkg, packages_at_hub)
+        route1.load_package(cur_pkg, packages_at_hub)
         if route1.any_package_late:
-            route1.unload_package_v2(cur_pkg, packages_at_hub)
+            route1.unload_package(cur_pkg, packages_at_hub)
             break
-    
-    
 
     return ([route1], packages_at_hub)
 
-def pop2_v4(departure_time_as_offset: int, packages_at_hub, truck_names):
+
+def populate_2_routes(departure_time_as_offset: int, packages_at_hub, truck_names):
     packages_at_hub = list(packages_at_hub) # make a copy
-    orig_num_pkgs = len(packages_at_hub)
 
     route1 = Route('route1', departure_time_as_offset)
     route1.truck_name = truck_names[0]
@@ -209,7 +204,7 @@ def pop2_v4(departure_time_as_offset: int, packages_at_hub, truck_names):
 
     # if just one package, then populate one route with it and return that result
     if len(packages_at_hub) == 1:
-        result = pop1_v3(departure_time_as_offset, list(packages_at_hub), 'truck 2')
+        result = populate_1_route(departure_time_as_offset, list(packages_at_hub), 'truck 2')
         return ([result[0][0]],  list(result[1]))
 
     # identify eligible packages
@@ -223,9 +218,9 @@ def pop2_v4(departure_time_as_offset: int, packages_at_hub, truck_names):
         cur_pkg = eligible_rush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != route1.truck_name:
             continue
-        route1.load_package_v2(cur_pkg, packages_at_hub)
+        route1.load_package(cur_pkg, packages_at_hub)
         if route1.any_package_late:
-            route1.unload_package_v2(cur_pkg, packages_at_hub)
+            route1.unload_package(cur_pkg, packages_at_hub)
             break
 
     # load route1 nonrush
@@ -233,9 +228,9 @@ def pop2_v4(departure_time_as_offset: int, packages_at_hub, truck_names):
         cur_pkg = eligible_nonrush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != route1.truck_name:
             continue
-        route1.load_package_v2(cur_pkg, packages_at_hub)
+        route1.load_package(cur_pkg, packages_at_hub)
         if route1.any_package_late:
-            route1.unload_package_v2(cur_pkg, packages_at_hub)
+            route1.unload_package(cur_pkg, packages_at_hub)
             break
 
     # recalculate eligible packages
@@ -249,9 +244,9 @@ def pop2_v4(departure_time_as_offset: int, packages_at_hub, truck_names):
         cur_pkg = eligible_rush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != route2.truck_name:
             continue
-        route2.load_package_v2(cur_pkg, packages_at_hub)
+        route2.load_package(cur_pkg, packages_at_hub)
         if route2.any_package_late:
-            route2.unload_package_v2(cur_pkg, packages_at_hub)
+            route2.unload_package(cur_pkg, packages_at_hub)
             break
 
     # load route2 nonrush
@@ -259,11 +254,9 @@ def pop2_v4(departure_time_as_offset: int, packages_at_hub, truck_names):
         cur_pkg = eligible_nonrush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != route2.truck_name:
             continue
-        route2.load_package_v2(cur_pkg, packages_at_hub)
+        route2.load_package(cur_pkg, packages_at_hub)
         if route2.any_package_late:
-            route2.unload_package_v2(cur_pkg, packages_at_hub)
+            route2.unload_package(cur_pkg, packages_at_hub)
             break
 
     return ([route1, route2], packages_at_hub)
-
-
