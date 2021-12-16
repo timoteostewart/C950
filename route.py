@@ -8,10 +8,7 @@ import my_package
 import my_time
 from my_utils import get_permutations as get_permutations
 
-
-
 class Route:
-
     def __init__(self, name, departure_time_as_offset):
         self.name = name
         self.truck_name = ''
@@ -242,7 +239,7 @@ def pop1_v3(departure_time_as_offset: int, packages_at_hub, truck_name):
             route1.unload_package_v2(cur_pkg, packages_at_hub)
             break
     
-    config.came_in_left_with_1[orig_num_pkgs][len(packages_at_hub)] += 1
+    
 
     return ([route1], packages_at_hub)
 
@@ -320,9 +317,6 @@ def pop2_v4(departure_time_as_offset: int, packages_at_hub, truck_names):
         if route2.any_package_late:
             route2.unload_package_v2(cur_pkg, packages_at_hub)
             break
-
-
-    config.came_in_left_with_2[orig_num_pkgs][len(packages_at_hub)] += 1
 
     return ([route1, route2], packages_at_hub)
 

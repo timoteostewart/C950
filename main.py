@@ -67,7 +67,7 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
         # config.found_a_solution = True
         return
 
-    print(f"entered solver helper with {len(route_list.routes)} routes, cumulative mileage of {route_list.cumulative_mileage}, and {len(packages_at_hub)} packages")
+    # print(f"entered solver helper with {len(route_list.routes)} routes, cumulative mileage of {route_list.cumulative_mileage}, and {len(packages_at_hub)} packages")
 
     # compute truck_availability and related times_of_future_interest
     trucks_unavailable = []
@@ -172,24 +172,27 @@ if __name__ == '__main__':
             route.convert_ordered_list_of_stops_to_package_delivery_order()
             # print("")
     
-    for i in range(0, 41):
-        for j in range(0, 41):
-            val = config.came_in_left_with_1[i][j]
-            if val != 0:
-                if i == j:
-                    print(f"pop1 ** came in with {i}, left with same number: {val} times")
+    # for i in range(0, 41):
+    #     for j in range(0, 41):
+    #         val = config.came_in_left_with_1[i][j]
+    #         if val != 0:
+    #             if i == j:
+    #                 print(f"pop1 ** came in with {i}, left with same number: {val} times")
 
-    for i in range(0, 41):
-        for j in range(0, 41):
-            val = config.came_in_left_with_2[i][j]
-            if val != 0:
-                if i == j:
-                    print(f"pop2 ** came in with {i}, left with same number: {val} times")
+    # for i in range(0, 41):
+    #     for j in range(0, 41):
+    #         val = config.came_in_left_with_2[i][j]
+    #         if val != 0:
+    #             if i == j:
+    #                 print(f"pop2 ** came in with {i}, left with same number: {val} times")
 
-    print(f"{config.route_lists_that_hit_zero_pkgs} reached 0 pkgs")
-    print(config.failure_reasons)
+    # print(f"{config.route_lists_that_hit_zero_pkgs} reached 0 pkgs")
+    # print(config.failure_reasons)
 
     print_delivery_schedule(winner)
+
+    for route_list in config.route_lists:
+        print(f"{len(route_list.routes)} {route_list.cumulative_mileage}")
 
     
     
