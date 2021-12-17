@@ -60,16 +60,16 @@ class Route:
         # translate packages into stops
         stops_not_yet_added_to_path = []
         for street_address in set([x.street_address for x in self.package_manifest]):
-            cur_stop = config.all_stops_by_street_address.get(street_address)
+            cur_stop = config.all_stops_by_street_address_ht.get(street_address)
             if cur_stop not in stops_not_yet_added_to_path:
                 stops_not_yet_added_to_path.append(cur_stop)
 
         path = [geo.HUB_STOP]
         prev_stop = geo.HUB_STOP
 
-        # add stops to path greedily
+        # add stops to path using "nearest neighbor" strategy
         while stops_not_yet_added_to_path:
-            stops_not_yet_added_to_path.sort(key=lambda stop: config.distances_between_pairs.get(f"{prev_stop.street_address} and {stop.street_address}"))
+            stops_not_yet_added_to_path.sort(key=lambda stop: config.distances_between_pairs_ht.get(f"{prev_stop.street_address} and {stop.street_address}"))
             cur_stop = stops_not_yet_added_to_path.pop(0)
             
             path.append(cur_stop)
@@ -168,7 +168,7 @@ def update_package_affinity_packages_view(packages_at_hub):
             p_ids_in_affinity.update(pkg.package_affinities)
     affinity_packages_view = []
     for p_id in p_ids_in_affinity:
-        cur_package = config.all_packages_by_id[p_id]
+        cur_package = config.all_packages_by_id_ht.get(p_id)
         affinity_packages_view.append(cur_package)
     return affinity_packages_view
 

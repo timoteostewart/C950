@@ -4,11 +4,13 @@ import math
 
 import config
 import data
+import interface
 import my_time
 import route
 from route import RouteList
 from route import populate_1_route as populate_1_route
 from route import populate_2_routes as populate_2_routes
+from snapshot import Snapshot
 
 def solver(first_departure_time, packages_at_hub):
     empty_route_list = RouteList()
@@ -110,19 +112,24 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
         solver_helper(rl, future_times_of_interest[0], list(result[1]))
     
 
+def store_snapshot_to_master_delivery_log(cur_time, route):
+    pass
+
 def print_delivery_schedule(route_list):
     if not route_list:
         print("This route_list is empty!")
         return
     
+
     for route in route_list.routes:
         cur_time = route.departure_time_as_offset
-        for i, v in enumerate(route.ordered_list_of_stops):
+
+        for i, _ in enumerate(route.ordered_list_of_stops):
             if i == 0:
                 continue
             prev_stop = route.ordered_list_of_stops[i-1]
             cur_stop = route.ordered_list_of_stops[i]
-            leg_distance = config.distances_between_pairs.get(f"{prev_stop.street_address} and {cur_stop.street_address}")
+            leg_distance = config.distances_between_pairs_ht.get(f"{prev_stop.street_address} and {cur_stop.street_address}")
             leg_time = int(math.ceil(leg_distance * config.MINUTES_PER_MILE)) # round time up to next minute
             cur_time += leg_time
             for pkg in route.package_manifest:
@@ -137,7 +144,20 @@ def print_delivery_schedule(route_list):
                         print("")
 
 
+
 if __name__ == '__main__':
+
+    data.ingest_distances()
+    packages_at_hub = data.ingest_packages()
+
+    s = Snapshot()
+    # initialize package statuses
+    for p_id in range(1, 41):
+        s.package_statuses[p_id] = config.all_packages_by_id_ht.get(p_id).delivery_status
+    s.display()
+
+    exit()
+
     data.ingest_distances()
     packages_at_hub = data.ingest_packages()
 
@@ -149,5 +169,9 @@ if __name__ == '__main__':
             print(f"{route}, packages: ", end='')
             route.convert_ordered_list_of_stops_to_package_delivery_order()
             # print("")
+        
+        print("press any key to inspect the delivery schedule more closely")
 
         print_delivery_schedule(winner)
+    else:
+        print("This is very embarrassing, but no solution could be found!")
