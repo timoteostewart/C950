@@ -4,13 +4,19 @@ import math
 
 import config
 import data
-import interface
+from delivery_schedule_writer import DeliveryScheduleWriter
+import geo
 import my_time
 import route
+import snapshot
+
+from album import Album
+from interface import user_interface as user_interface
 from route import RouteList
 from route import populate_1_route as populate_1_route
 from route import populate_2_routes as populate_2_routes
 from snapshot import Snapshot
+from truck import Truck
 
 def solver(first_departure_time, packages_at_hub):
     empty_route_list = RouteList()
@@ -48,6 +54,7 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
 
     # see if we're out of packages
     if len(packages_at_hub) == 0:
+        # TODO: when closing out a route list, add the starting and ending times as offsets
         config.route_lists.append(route_list)
         config.route_lists.sort(key=lambda rl: rl.cumulative_mileage)
         return
@@ -115,34 +122,6 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
 def store_snapshot_to_master_delivery_log(cur_time, route):
     pass
 
-def print_delivery_schedule(route_list):
-    if not route_list:
-        print("This route_list is empty!")
-        return
-    
-
-    for route in route_list.routes:
-        cur_time = route.departure_time_as_offset
-
-        for i, _ in enumerate(route.ordered_list_of_stops):
-            if i == 0:
-                continue
-            prev_stop = route.ordered_list_of_stops[i-1]
-            cur_stop = route.ordered_list_of_stops[i]
-            leg_distance = config.distances_between_pairs_ht.get(f"{prev_stop.street_address} and {cur_stop.street_address}")
-            leg_time = int(math.ceil(leg_distance * config.MINUTES_PER_MILE)) # round time up to next minute
-            cur_time += leg_time
-            for pkg in route.package_manifest:
-                if pkg.street_address == cur_stop.street_address:
-                    if pkg.deadline_as_offset == 1440:
-                        print(f"{route.truck_name} delivered nonrush package {pkg.id} at {my_time.convert_minutes_offset_to_time(cur_time)}", end='')
-                    else:
-                        print(f"{route.truck_name} delivered    rush package {pkg.id} at {my_time.convert_minutes_offset_to_time(cur_time)} (deadline is {my_time.convert_minutes_offset_to_time(pkg.deadline_as_offset)})", end='')
-                    if pkg.truck_affinity:
-                        print(f"                        (affinity {pkg.truck_affinity})")
-                    else:
-                        print("")
-
 
 
 if __name__ == '__main__':
@@ -150,13 +129,16 @@ if __name__ == '__main__':
     data.ingest_distances()
     packages_at_hub = data.ingest_packages()
 
-    s = Snapshot()
-    # initialize package statuses
-    for p_id in range(1, 41):
-        s.package_statuses[p_id] = config.all_packages_by_id_ht.get(p_id).delivery_status
-    s.display()
+    # s = Snapshot(-1)
+    # # initialize package statuses
+    # for p_id in range(1, 41):
+    #     s.package_statuses[p_id] = config.all_packages_by_id_ht.get(p_id).delivery_status
+    # s.update_computed_values(packages_at_hub)
+    # s.display()
 
-    exit()
+    # user_interface()
+
+    # exit()
 
     data.ingest_distances()
     packages_at_hub = data.ingest_packages()
@@ -172,6 +154,10 @@ if __name__ == '__main__':
         
         print("press any key to inspect the delivery schedule more closely")
 
-        print_delivery_schedule(winner)
+        dsw = DeliveryScheduleWriter(winner)
+        album = dsw.populate_album_with_snapshots()
+        album.display_active_snapshots()
+
+
     else:
         print("This is very embarrassing, but no solution could be found!")

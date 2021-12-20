@@ -134,6 +134,8 @@ class RouteList:
     routes: list[Route]
     cumulative_mileage: float = 0.0
     number_of_packages_delivered: int = 0
+    first_departure_time_as_offset: int = 0
+    final_return_time_as_offset: int = 0
 
     def __init__(self) -> None:
         self.routes = []
@@ -144,6 +146,8 @@ class RouteList:
             new_route_list.routes.append(route.deep_copy())
         new_route_list.cumulative_mileage = self.cumulative_mileage
         new_route_list.number_of_packages_delivered = self.number_of_packages_delivered
+        new_route_list.first_departure_time_as_offset = self.first_departure_time_as_offset
+        new_route_list.final_return_time_as_offset = self.final_return_time_as_offset
         return new_route_list
 
 
