@@ -54,7 +54,6 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
 
     # see if we're out of packages
     if len(packages_at_hub) == 0:
-        # TODO: when closing out a route list, add the starting and ending times as offsets
         config.route_lists.append(route_list)
         config.route_lists.sort(key=lambda rl: rl.cumulative_mileage)
         return
@@ -156,6 +155,7 @@ if __name__ == '__main__':
 
         dsw = DeliveryScheduleWriter(winner)
         album = dsw.populate_album_with_snapshots()
+        album.interpolate_snapshots()
         album.display_active_snapshots()
 
 

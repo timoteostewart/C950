@@ -6,9 +6,10 @@ import geo
 import my_time
 
 class Route:
-    def __init__(self, name, departure_time_as_offset):
+    def __init__(self, name, departure_time_as_offset, truck_name):
         self.name = name
-        self.truck_name = ''
+        self.truck_name = truck_name
+        self.truck_number = int(truck_name[-1])
         self.departure_time_as_offset = departure_time_as_offset
 
         self.packages_at_hub = []
@@ -26,8 +27,7 @@ class Route:
         return slug
 
     def deep_copy(self):
-        new_route = Route(self.name, self.departure_time_as_offset)
-        new_route.truck_name = self.truck_name
+        new_route = Route(self.name, self.departure_time_as_offset, self.truck_name)
         new_route.packages_at_hub = list(self.packages_at_hub)
         new_route.package_manifest = list(self.package_manifest)
         new_route.ordered_list_of_stops = list(self.ordered_list_of_stops)
@@ -136,6 +136,7 @@ class RouteList:
     number_of_packages_delivered: int = 0
     first_departure_time_as_offset: int = 0
     final_return_time_as_offset: int = 0
+    truck_mileage_for_the_day = [0.0, 0.0, 0.0]
 
     def __init__(self) -> None:
         self.routes = []
@@ -180,8 +181,7 @@ def update_package_affinity_packages_view(packages_at_hub):
 def populate_1_route(departure_time_as_offset: int, packages_at_hub, truck_name):
     packages_at_hub = list(packages_at_hub) # make a copy
 
-    route1 = Route('route1', departure_time_as_offset)
-    route1.truck_name = truck_name
+    route1 = Route('route1', departure_time_as_offset, truck_name)
 
     # identify eligible packages
     eligible_rush_packages, eligible_nonrush_packages = update_rush_nonrush_packages_views(departure_time_as_offset, packages_at_hub)
@@ -223,11 +223,8 @@ def populate_1_route(departure_time_as_offset: int, packages_at_hub, truck_name)
 def populate_2_routes(departure_time_as_offset: int, packages_at_hub, truck_names):
     packages_at_hub = list(packages_at_hub) # make a copy
 
-    route1 = Route('route1', departure_time_as_offset)
-    route1.truck_name = truck_names[0]
-
-    route2 = Route('route2', departure_time_as_offset)
-    route2.truck_name = truck_names[1]
+    route1 = Route('route1', departure_time_as_offset, truck_names[0])
+    route2 = Route('route2', departure_time_as_offset, truck_names[1])
 
     # if just one package, then populate one route with it and return that result
     if len(packages_at_hub) == 1:
