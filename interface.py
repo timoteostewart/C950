@@ -55,18 +55,22 @@ def parse_user_time(time_as_str):
                 minute = 0
     
     # bounds checking
-    if hour is None or hour < 0:
-        hour = 0
-    if hour > 23:
-        hour = 23
-    if minute is None or minute < 0:
-        minute = 0
-    if minute > 59:
-        minute = 59
+    # hours
+    if hour is None or hour <= 0:
+        hour = 12
+        is_am = True
+        is_pm = False
+    if hour > 24:
+        hour = 24
     if hour > 12:
         is_am = False
         is_pm = True
         hour -= 12
+    # minutes
+    if minute is None or minute < 0:
+        minute = 0
+    elif minute > 59:
+        minute = 59
 
     # assign am/pm designator
     if is_am and not is_pm:
@@ -74,15 +78,9 @@ def parse_user_time(time_as_str):
     elif is_pm and not is_am:
         ampmdesignator = "p.m."
     else: # (is_am and is_pm) or (not is_am and not is_pm):
-        if hour < 12:
-            ampmdesignator = "a.m."
-        if hour >= 12:
-            ampmdesignator = "p.m."
+        ampmdesignator = "a.m."
 
     # display checks
-    if hour == 0:
-        hour = 12
-        ampmdesignator = "a.m."
     if minute < 10:
         minute = '0' + str(minute)
 
