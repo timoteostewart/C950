@@ -12,6 +12,7 @@ import route
 import snapshot
 
 from album import Album
+from interface import parse_user_time as parse_user_time
 from interface import user_interface as user_interface
 from route import RouteList
 from route import populate_1_route as populate_1_route
