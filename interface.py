@@ -1,4 +1,5 @@
 import os
+import re
 import time
 
 from album import Album
@@ -19,12 +20,79 @@ def press_any_key():
 
 
 def parse_user_time(time_as_str):
-    pass
+    am_designator_re = [r'.*(a[\.\ ]?[\ ]?m[\.\ ]?).*', r'.*(a[\.]?).*']
+    pm_designator_re = [r'.*(p[\.\ ]?[\ ]?m[\.\ ]?).*', r'.*(p[\.]?).*']
+    
+    time_values_re = [r'([\d]{1,2})[^\d]*([\d]{2})', r'[\d]{1,2}']
+
+    is_am = False
+    is_pm = False
+    ampmdesignator = None
+    hour = None
+    minute = None
+
+    # check for am
+    for r in am_designator_re:
+        result = re.match(r, time_as_str, re.IGNORECASE)
+        if result:
+            is_am = True
+    
+    # check for pm
+    for r in pm_designator_re:
+        result = re.match(r, time_as_str, re.IGNORECASE)
+        if result:
+            is_pm = True
+
+    for r in time_values_re:
+        result = re.findall(r, time_as_str)
+        if result:
+            if type(result[0]) == tuple:
+                hour = int(result[0][0])
+                minute = int(result[0][1])
+                break
+            else:
+                hour = int(result[0])
+                minute = 0
+    
+    # bounds checking
+    if hour is None or hour < 0:
+        hour = 0
+    if hour > 23:
+        hour = 23
+    if minute is None or minute < 0:
+        minute = 0
+    if minute > 59:
+        minute = 59
+    if hour > 12:
+        is_am = False
+        is_pm = True
+        hour -= 12
+
+    # assign am/pm designator
+    if is_am and not is_pm:
+        ampmdesignator = "a.m."
+    elif is_pm and not is_am:
+        ampmdesignator = "p.m."
+    else: # (is_am and is_pm) or (not is_am and not is_pm):
+        if hour < 12:
+            ampmdesignator = "a.m."
+        if hour >= 12:
+            ampmdesignator = "p.m."
+
+    # display checks
+    if hour == 0:
+        hour = 12
+        ampmdesignator = "a.m."
+    if minute < 10:
+        minute = '0' + str(minute)
+
+    return f"{hour}:{minute} {ampmdesignator}"
+
 
 def user_interface(album: Album):
     press_any_key()
     clear_screen()
-    print(f"The album contains {album.final_return_to_hub_as_offset} minutes of data, from 7:59 am to {my_time.convert_minutes_offset_to_time(album.final_return_to_hub_as_offset)}.\n")
+    print(f"The delivery log contains {album.final_return_to_hub_as_offset} minutes of data, from 7:59 am to {my_time.convert_minutes_offset_to_time(album.final_return_to_hub_as_offset)}.\n")
     
     cur_offset = -1
     
