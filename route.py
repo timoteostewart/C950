@@ -23,7 +23,7 @@ class Route:
 
     def __str__(self) -> str:
         slug = ""
-        slug += f"{self.truck_name}: departed {my_time.convert_minutes_offset_to_time(self.departure_time_as_offset)}, returned {my_time.convert_minutes_offset_to_time(self.return_time_as_offset)}, delivered: {len(self.package_manifest)}, mileage: {self.distance_traveled_in_miles}"
+        slug += f"{self.truck_name.title()} departed at {my_time.convert_minutes_offset_to_time(self.departure_time_as_offset)}, returned at {my_time.convert_minutes_offset_to_time(self.return_time_as_offset)}, delivered {len(self.package_manifest)} packages, traveled {self.distance_traveled_in_miles} miles."
         return slug
 
     def deep_copy(self):
@@ -80,11 +80,12 @@ class Route:
 
 
     def convert_ordered_list_of_stops_to_package_delivery_order(self):
+        result = ''
         for stop in self.ordered_list_of_stops:
             for pkg in self.package_manifest:
                 if pkg.street_address == stop.street_address:
-                    print(f"{pkg.id} ", end='')
-        print()
+                    result += f"{pkg.id} "
+        return result
 
     
     def update_route_stats(self):

@@ -88,15 +88,15 @@ class Snapshot:
     def display(self):
 
 
-        print(f"{self.current_time_as_offset:3}:   "
-        f"T1 {self.trucks[1].mileage_for_this_route_so_far:5.1f}/"
-        f"{self.trucks[1].cumulative_mileage_for_the_day_display:5.1f},   "
-        f"T2 {self.trucks[2].mileage_for_this_route_so_far:5.1f}/"
-        f"{self.trucks[2].cumulative_mileage_for_the_day_display:5.1f},   "
-        f"all {self.all_trucks_cumulative_mileage_for_day:5.1f}   "
-        f"{'K' if self.is_key_frame else ''}"
-        "")
-        return
+        # print(f"{self.current_time_as_offset:3}:   "
+        # f"T1 {self.trucks[1].mileage_for_this_route_so_far:5.1f}/"
+        # f"{self.trucks[1].cumulative_mileage_for_the_day_display:5.1f},   "
+        # f"T2 {self.trucks[2].mileage_for_this_route_so_far:5.1f}/"
+        # f"{self.trucks[2].cumulative_mileage_for_the_day_display:5.1f},   "
+        # f"all {self.all_trucks_cumulative_mileage_for_day:5.1f}   "
+        # f"{'K' if self.is_key_frame else ''}"
+        # "")
+        # return
 
         # construct package status lines
         all_package_statuses = ''

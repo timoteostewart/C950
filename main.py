@@ -6,6 +6,7 @@ import config
 import data
 from delivery_schedule_writer import DeliveryScheduleWriter
 import geo
+import interface
 import my_time
 import route
 import snapshot
@@ -21,7 +22,6 @@ from truck import Truck
 def solver(first_departure_time, packages_at_hub):
     empty_route_list = RouteList()
     solver_helper(empty_route_list, my_time.convert_time_to_minutes_offset(first_departure_time), list(packages_at_hub))
-    print(f"found {len(config.route_lists)} routes")
     config.route_lists.sort(key=lambda route_list: route_list.cumulative_mileage)
     if config.route_lists:
         return config.route_lists[0]
@@ -118,9 +118,6 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
         solver_helper(rl, future_times_of_interest[0], list(result[1]))
     
 
-def store_snapshot_to_master_delivery_log(cur_time, route):
-    pass
-
 
 
 if __name__ == '__main__':
@@ -128,34 +125,20 @@ if __name__ == '__main__':
     data.ingest_distances()
     packages_at_hub = data.ingest_packages()
 
-    # s = Snapshot(-1)
-    # # initialize package statuses
-    # for p_id in range(1, 41):
-    #     s.package_statuses[p_id] = config.all_packages_by_id_ht.get(p_id).delivery_status
-    # s.update_computed_values(packages_at_hub)
-    # s.display()
-
-    # user_interface()
-
-    # exit()
-
-    data.ingest_distances()
-    packages_at_hub = data.ingest_packages()
-
     winner = solver('8:00 am', list(packages_at_hub))
     
-    if winner:
-        print(f"traveled {winner.cumulative_mileage} miles and delivered {winner.number_of_packages_delivered} packages")
+    if config.route_lists:
+        print(f"The back-tracking plus heuristics algorithm found {len(config.route_lists)} valid ways to solve the problem.\n"
+        f"The winning set of {len(winner.routes)} routes traveled a total of {winner.cumulative_mileage} miles and delivered {winner.number_of_packages_delivered} packages with no missed deadlines and all package constraints met.\n"
+        f"Here are the routes with their truck numbers and details:"
+        f"")
         for route in winner.routes:
-            print(f"{route}, packages: ", end='')
-            route.convert_ordered_list_of_stops_to_package_delivery_order()
-            # print("")
-        
-        print("press any key to inspect the delivery schedule more closely")
-
+            print(f"{route} Packages delivered: {route.convert_ordered_list_of_stops_to_package_delivery_order()}")
+            
         dsw = DeliveryScheduleWriter(winner)
         album = dsw.populate_album_with_snapshots()
-        album.display_active_snapshots()
+        # album.display_active_snapshots()
+        user_interface(album)
 
 
     else:
