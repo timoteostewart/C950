@@ -18,7 +18,7 @@ def press_any_key():
         _ = os.system('pause')
 
 
-def parse_time(time_as_str):
+def parse_user_time(time_as_str):
     pass
 
 def user_interface(album: Album):
