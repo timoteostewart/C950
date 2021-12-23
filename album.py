@@ -36,6 +36,10 @@ class Album:
                 if cur_snapshot.package_statuses[p_id] == None:
                     cur_snapshot.package_statuses[p_id] = prev_snapshot.package_statuses[p_id]
 
+            # special situation for package with incorrect address
+            if cur_offset == 140:
+                cur_snapshot.package_statuses[9] = 'at hub'
+
             # case 1: we have both trucks in the current snapshot, so nothing to carry forward
             if cur_snapshot.trucks[1] and cur_snapshot.trucks[2]:
                 pass

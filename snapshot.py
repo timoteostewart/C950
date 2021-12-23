@@ -57,7 +57,7 @@ class Snapshot:
         self.package_statuses = [None] * 41 # skip zeroth element so that package ids are indexes
 
         # computed values
-        self.all_trucks_cumulative_mileage_for_day = -1.0
+        self.all_trucks_cumulative_mileage_for_day = 0.0
 
         self.is_key_frame = False
         
@@ -87,17 +87,6 @@ class Snapshot:
 
     def display(self):
 
-
-        # print(f"{self.current_time_as_offset:3}:   "
-        # f"T1 {self.trucks[1].mileage_for_this_route_so_far:5.1f}/"
-        # f"{self.trucks[1].cumulative_mileage_for_the_day_display:5.1f},   "
-        # f"T2 {self.trucks[2].mileage_for_this_route_so_far:5.1f}/"
-        # f"{self.trucks[2].cumulative_mileage_for_the_day_display:5.1f},   "
-        # f"all {self.all_trucks_cumulative_mileage_for_day:5.1f}   "
-        # f"{'K' if self.is_key_frame else ''}"
-        # "")
-        # return
-
         # construct package status lines
         all_package_statuses = ''
         for row_num in range(1, 11):
@@ -110,12 +99,13 @@ class Snapshot:
             all_package_statuses += cur_row
             all_package_statuses += '\n'
 
-        print(f"\n"
+        print(f""
         f"==============================================================================\n"
-        f"Delivery Log Inspector for WGU package delivery system\n"
+        f"Delivery Log Inspector for WGU package delivery system\n\n"
         f"Current time: {bold_text(right_pad_to_n_chars(my_time.convert_minutes_offset_to_time(self.current_time_as_offset), 8))}    Commands: 't': go to time,  'p' play,  'q': quit\n"
-        f"All trucks mileage so far: {right_pad_to_n_chars(round_float_to_tenths_for_display(self.all_trucks_cumulative_mileage_for_day), 5)}    'a': ← 1 hr,  's': ← 10 min,  'd': ← 1 min\n"
-        f"T# Status                           'j': → 1 min,  'k': → 10 min,  'l': → 1 hr\n"
+        f"                                    'a': ← 1 hr,  's': ← 10 min,  'd': ← 1 min\n"
+        f"All trucks mileage so far: {right_pad_to_n_chars(str(round_float_to_tenths_for_display(self.all_trucks_cumulative_mileage_for_day) + ' mi'), 8)} 'j': → 1 min,  'k': → 10 min,  'l': → 1 hr\n"
+        f"T# Status\n"
         f"-- ---------------------------------------------------------------------------\n"
         f" 1 {self.trucks[1].detailed_status}\n"
         f" 2 {self.trucks[2].detailed_status}\n"

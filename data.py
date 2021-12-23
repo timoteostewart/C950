@@ -108,7 +108,7 @@ def ingest_packages():
 
             if not delivery_status:
                 # if we haven't assigned a special delivery status, default to 'at the hub'
-                delivery_status = 'at the hub'
+                delivery_status = 'at hub'
 
             # add this package to our hash table
             cur_package = my_package.Package(package_id, street_address, city, zip, deadline_as_offset, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, distance_from_hub, delivery_status)
