@@ -155,7 +155,6 @@ if __name__ == '__main__':
 
         dsw = DeliveryScheduleWriter(winner)
         album = dsw.populate_album_with_snapshots()
-        album.interpolate_snapshots()
         album.display_active_snapshots()
 
 

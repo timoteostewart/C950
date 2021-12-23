@@ -10,7 +10,7 @@ from truck import Truck
 def update_truck_mileage_during_interpolation(truck: Truck):
     if not (truck.base_status == 'at hub' or truck.base_status == 'back at hub'):
         truck.mileage_for_this_route_so_far += config.MILES_PER_MINUTE
-        truck.cumulative_mileage_for_the_day += config.MILES_PER_MINUTE
+        truck.cumulative_mileage_for_the_day_display += config.MILES_PER_MINUTE
 
 
 class Album:
@@ -31,29 +31,28 @@ class Album:
                 self.snapshots[cur_offset] = Snapshot(cur_offset)
                 cur_snapshot = self.snapshots[cur_offset]
 
-            # carry forward package info
+            # all cases: carry forward package info
             for p_id in range(1, 41):
                 if cur_snapshot.package_statuses[p_id] == None:
                     cur_snapshot.package_statuses[p_id] = prev_snapshot.package_statuses[p_id]
 
-            # carry forward truck info
-            # case 1: neither truck took action in this minute
-            if not cur_snapshot.trucks[1] and not cur_snapshot.trucks[2]:
+            # case 1: we have both trucks in the current snapshot, so nothing to carry forward
+            if cur_snapshot.trucks[1] and cur_snapshot.trucks[2]:
+                pass
+
+            # case 2: we have just one truck, so carry forward the other truck from prev_snapshot
+            elif (cur_snapshot.trucks[1] and not cur_snapshot.trucks[2]) or (cur_snapshot.trucks[2] and not cur_snapshot.trucks[1]):
+                truck_num_missing_data = 1 if not cur_snapshot.trucks[1] else 2
+                cur_snapshot.trucks[truck_num_missing_data] = copy.copy(prev_snapshot.trucks[truck_num_missing_data])
+                update_truck_mileage_during_interpolation(cur_snapshot.trucks[truck_num_missing_data])
+
+            # case 3: we have no trucks, so carry forward both trucks from prev_snapshot
+            elif not cur_snapshot.trucks[1] and not cur_snapshot.trucks[2]:
                 for truck_num in [1, 2]:
                     cur_snapshot.trucks[truck_num] = copy.copy(prev_snapshot.trucks[truck_num])
                     update_truck_mileage_during_interpolation(cur_snapshot.trucks[truck_num])
-            
-            # case 2: one truck took action in this minute
-            elif (cur_snapshot.trucks[1] and not cur_snapshot.trucks[2]) or (cur_snapshot.trucks[2] and not cur_snapshot.trucks[1]):
-                inactive_truck_num = 2 if cur_snapshot.trucks[1] else 1
-                cur_snapshot.trucks[inactive_truck_num] = copy.copy(prev_snapshot.trucks[inactive_truck_num])
-                update_truck_mileage_during_interpolation(cur_snapshot.trucks[inactive_truck_num])
-
-            # case 3: both trucks took action in this minute
-            else: # cur_snapshot.trucks[1] and cur_snapshot.trucks[2]:
-                pass # preserve the trucks' existing details
-                
-            # all cases: update truck statuses as needed
+              
+            # all cases: update truck statuses as necessary
             for truck_num in [1, 2]:
                 if prev_snapshot.trucks[truck_num].base_status == 'departing hub' or prev_snapshot.trucks[truck_num].base_status == 'delivering':
                     cur_snapshot.trucks[truck_num].base_status = 'en route'
@@ -62,24 +61,20 @@ class Album:
                 elif prev_snapshot.trucks[truck_num].base_status == 'last stop':
                     cur_snapshot.trucks[truck_num].base_status = 'returning'
 
-            # update `self.all_trucks_cumulative_mileage_for_day`
-            if cur_snapshot.all_trucks_cumulative_mileage_for_day == -1.0:
-                cur_snapshot.all_trucks_cumulative_mileage_for_day = cur_snapshot.trucks[1].cumulative_mileage_for_the_day + cur_snapshot.trucks[2].cumulative_mileage_for_the_day
-
             # update truck statuses
             cur_snapshot.expand_truck_base_statuses_to_detailed_statuses()
+            cur_snapshot.all_trucks_cumulative_mileage_for_day = cur_snapshot.trucks[1].cumulative_mileage_for_the_day_display + cur_snapshot.trucks[2].cumulative_mileage_for_the_day_display
         
 
     def check_in_snapshot(self, incoming_snapshot: snapshot.Snapshot, truck: truck.Truck):
         truck.list_of_packages_delivered_to_this_stop.sort()
-        incoming_snapshot.trucks[truck.truck_number] = truck
+        incoming_snapshot.trucks[truck.truck_number] = copy.copy(truck)
 
         cur_snapshot = self.snapshots[incoming_snapshot.current_time_as_offset]
 
         # case 1: no snapshot yet (since other truck hasn't taken action in this minute yet),
         #       so create a snapshot
         if not cur_snapshot:
-            incoming_snapshot.trucks[truck.truck_number] = truck
             incoming_snapshot.expand_truck_base_statuses_to_detailed_statuses()
             self.snapshots[incoming_snapshot.current_time_as_offset] = incoming_snapshot
             return
@@ -94,7 +89,7 @@ class Album:
                 cur_snapshot.package_statuses[p_id] = incoming_status
 
         # then, copy incoming truck into current snapshot
-        cur_snapshot.trucks[truck.truck_number] = copy.copy(truck)
+        cur_snapshot.trucks[truck.truck_number] = copy.copy(incoming_snapshot.trucks[truck.truck_number])
         cur_snapshot.expand_truck_base_statuses_to_detailed_statuses()
 
     

@@ -9,6 +9,7 @@ class Truck:
         
         self.mileage_for_this_route_so_far: float = 0.0
         self.cumulative_mileage_for_the_day: float = 0.0
+        self.cumulative_mileage_for_the_day_display: float = 0.0
         
         self.cur_num_pkgs: int = 0
         self.num_pkgs_being_delivered_now: int = 0
