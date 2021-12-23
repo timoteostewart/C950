@@ -61,7 +61,7 @@ def parse_user_time(time_as_str):
         is_am = True
         is_pm = False
     if hour > 24:
-        hour = 24
+        hour = 23
     if hour > 12:
         is_am = False
         is_pm = True
@@ -110,8 +110,10 @@ def user_interface(album: Album):
             elif cur_offset > album.final_return_to_hub_as_offset:
                 cur_offset = album.final_return_to_hub_as_offset 
         elif cmd == 't':
-            user_time_str = input("Enter a time:")
-            cur_offset = parse_time(user_time_str)
+            user_requested_time_str = input("Enter a time:")
+            user_requested_time_str_sanitized = parse_user_time(user_requested_time_str)
+            # TODO: convert user_requested_time_str_sanitized to time offset, applying bounds checking
+            # set cur_offset to user_requested_offset
         elif cmd == 'p':
             cur_offset = -1
             while cur_offset < album.final_return_to_hub_as_offset:
