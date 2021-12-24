@@ -1,16 +1,4 @@
-# import copy
-
-# import config
-# import geo
-# import math
 import my_time
-
-# import album
-
-# from my_package import Package
-# from truck import Truck
-# import truck
-
 
 def add_singular_plural_packages_as_needed(number):
     if number == 1:

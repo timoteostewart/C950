@@ -1,4 +1,5 @@
 import math
+import re
 
 def convert_time_to_minutes_offset(time):
     colon_offset = time.find(':')
