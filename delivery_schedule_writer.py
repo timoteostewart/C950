@@ -1,12 +1,9 @@
 import copy
 import math
 
-import album
 import config
 import geo
 import my_time
-import snapshot
-import truck
 
 from album import Album
 from route import RouteList
@@ -40,8 +37,9 @@ class DeliveryScheduleWriter:
 
             snapshot_for_minute_of_departure = Snapshot(route.departure_time_as_offset)
             
+            # keep track of when last truck returns to hub
             if route.return_time_as_offset > album.final_return_to_hub_as_offset:
-                album.final_return_to_hub_as_offset = route.return_time_as_offset # `album.final_return_to_hub_as_offset` will tell us how many snapshots we need
+                album.final_return_to_hub_as_offset = route.return_time_as_offset
 
             cur_time_as_offset = route.departure_time_as_offset
             cur_truck = trucks[route.truck_number]
@@ -62,7 +60,7 @@ class DeliveryScheduleWriter:
             for i, _ in enumerate(route.ordered_list_of_stops):
                 
                 if i == 0:
-                    continue # skip hub stop, since it was in `snapshot_for_minute_of_departure``
+                    continue # skip hub stop, since it was already saved in `snapshot_for_minute_of_departure``
                 
                 prev_stop = route.ordered_list_of_stops[i-1]
                 cur_stop = route.ordered_list_of_stops[i]
@@ -101,11 +99,11 @@ class DeliveryScheduleWriter:
                 if cur_truck.list_of_packages_delivered_to_this_stop:
                     cur_snapshot.packages_delivered_in_this_minute = cur_truck.list_of_packages_delivered_to_this_stop
                 
-                cur_snapshot.is_key_frame = True
+                cur_snapshot.is_key_frame = True # this means we won't interpolate the truck's mileage, because we already know the exact value
 
                 album.check_in_snapshot(cur_snapshot, cur_truck)
 
-        
+        # calculate total miles traveled for each truck
         for route in self.route_list.routes:
             self.route_list.truck_mileage_for_the_day[route.truck_number] += route.distance_traveled_in_miles
         
@@ -113,6 +111,7 @@ class DeliveryScheduleWriter:
         final_snapshot.all_trucks_cumulative_mileage_for_day = self.route_list.truck_mileage_for_the_day[1] + self.route_list.truck_mileage_for_the_day[2]
         final_snapshot.end_of_day_banner = ' (completed)'
 
+        # fill in snapshots between the key snapshots; mostly this is all the "en route" traveling by trucks
         album.interpolate_snapshots()
 
         return album

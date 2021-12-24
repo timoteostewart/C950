@@ -3,8 +3,9 @@ import re
 
 import config
 import geo
-import my_package
 import my_time
+
+from my_package import Package
 
 def ingest_distances():
     # populate list_of_locations
@@ -18,7 +19,7 @@ def ingest_distances():
                 street_address = street_address[:-8] # truncate parenthetical zip code
                 list_of_street_addresses.append(street_address)
 
-    # populate config.distances_between_pairs_ht
+    # populate config.distances_between_pairs_ht (hash table)
     with open('WGUPS Distance Table.csv') as csvfile:
         distances = csv.reader(csvfile, delimiter=',')
         cur_row = 0
@@ -37,12 +38,12 @@ def ingest_distances():
                     if left_location == right_location:
                         config.distances_between_pairs_ht.add(K, V)
                     else:
-                        K2 = f"{right_location} and {left_location}"
+                        K_reversed = f"{right_location} and {left_location}"
                         config.distances_between_pairs_ht.add(K, V)
-                        config.distances_between_pairs_ht.add(K2, V)
+                        config.distances_between_pairs_ht.add(K_reversed, V)
                         
     for street_address in list_of_street_addresses:
-        # populate config.all_stops_by_street_address_ht
+        # populate config.all_stops_by_street_address_ht (hash table)
         cur_stop = geo.Stop(street_address, geo.get_distance(geo.HUB_STREET_ADDRESS, street_address))
         config.all_stops_by_street_address_ht.add(street_address, cur_stop)
 
@@ -64,10 +65,10 @@ def ingest_packages():
             weight_kg = int(row[6])
             notes = row[7]
 
-            # compute deadline as an offset
+            # compute deadline as an offset from 8 a.m.
             deadline_as_offset = None # will initialize next
             if deadline_as_time == 'EOD':
-                deadline_as_offset = 1440 # 1440 minutes = 24 hours * 60 minutes; this represents a deadline of "end of day"
+                deadline_as_offset = 1440 # 1440 minutes = 24 hours * 60 minutes; value of 1440 is sentinel value that represents a deadline of "end of day"
             else:
                 deadline_as_offset = my_time.convert_time_to_minutes_offset(deadline_as_time)
 
@@ -107,11 +108,11 @@ def ingest_packages():
             distance_from_hub = geo.get_distance(geo.HUB_STREET_ADDRESS, street_address)
 
             if not delivery_status:
-                # if we haven't assigned a special delivery status, default to 'at the hub'
+                # if we haven't assigned a special delivery status, default to 'at hub'
                 delivery_status = 'at hub'
 
             # add this package to our hash table
-            cur_package = my_package.Package(package_id, street_address, city, zip, deadline_as_offset, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, distance_from_hub, delivery_status)
+            cur_package = Package(package_id, street_address, city, zip, deadline_as_offset, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, distance_from_hub, delivery_status)
             config.all_packages_by_id_ht.add(package_id, cur_package)
             
             packages_at_hub.append(cur_package)

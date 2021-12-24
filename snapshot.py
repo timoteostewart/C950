@@ -1,15 +1,15 @@
-import copy
+# import copy
 
-import config
-import geo
-import math
+# import config
+# import geo
+# import math
 import my_time
 
-import album
+# import album
 
-from my_package import Package
-from truck import Truck
-import truck
+# from my_package import Package
+# from truck import Truck
+# import truck
 
 
 def add_singular_plural_packages_as_needed(number):
@@ -69,8 +69,6 @@ class Snapshot:
         
 
     def expand_truck_base_statuses_to_detailed_statuses(self):
-
-        # truck statuses
         for truck_num in [1, 2]:
             if not self.trucks[truck_num]:
                 continue
@@ -90,9 +88,7 @@ class Snapshot:
                 self.trucks[truck_num].detailed_status = f"returning to hub empty ({round_float_to_tenths_for_display(self.trucks[truck_num].mileage_for_this_route_so_far)} miles traveled since hub)"
         
 
-
     def display(self):
-
         # construct package status lines
         all_package_statuses = ''
         for row_num in range(1, 11):
@@ -108,8 +104,6 @@ class Snapshot:
                     cur_row += f"{str(cur_pkg_id)} {right_pad_to_n_chars(self.package_statuses[cur_pkg_id], 15)}  "
             all_package_statuses += cur_row
             all_package_statuses += '\n'
-
-
 
         print(f""
         f"==============================================================================\n"

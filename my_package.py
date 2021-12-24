@@ -17,6 +17,3 @@ class Package:
     def __hash__(self) -> int:
         return self.id
 
-
-    def __str__(self) -> str:
-        return f"id {self.id}, lat_long {self.lat_long}"

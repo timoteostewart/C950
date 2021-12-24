@@ -9,6 +9,4 @@ distances_between_pairs_ht = HashTable((27 ** 2) // HASH_TABLE_LOAD_FACTOR) # 27
 all_stops_by_street_address_ht = HashTable(27 // HASH_TABLE_LOAD_FACTOR) # 27 possible stops
 all_packages_by_id_ht = HashTable(40 // HASH_TABLE_LOAD_FACTOR) # 40 packages
 
-master_delivery_log = HashTable((8 * 60) // HASH_TABLE_LOAD_FACTOR) # up to 8 hours of delivery data, granular to 1-minute increments, so we'll store up to 8 * 60 (== 480) snapshots and package statuses
-
-route_lists = []
+route_lists = [] # to store valid route_lists during backtracking algorithm

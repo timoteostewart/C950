@@ -1,24 +1,16 @@
 # {student_name: "Tim Stewart", student_id: "001476583"}
 
-import math
-
 import config
 import data
 from delivery_schedule_writer import DeliveryScheduleWriter
-import geo
-import interface
 import my_time
 import route
-import snapshot
 
-from album import Album
-from interface import parse_user_time as parse_user_time
 from interface import user_interface as user_interface
 from route import RouteList
 from route import populate_1_route as populate_1_route
 from route import populate_2_routes as populate_2_routes
-from snapshot import Snapshot
-from truck import Truck
+ 
 
 def solver(first_departure_time, packages_at_hub):
     empty_route_list = RouteList()
@@ -31,7 +23,6 @@ def solver(first_departure_time, packages_at_hub):
 
 
 def solver_helper(route_list, current_time_as_offset, packages_at_hub):
-
     # update route_list's cumulative mileage
     cumulative_mileage = 0.0
     number_of_packages_delivered = 0
@@ -119,8 +110,6 @@ def solver_helper(route_list, current_time_as_offset, packages_at_hub):
         solver_helper(rl, future_times_of_interest[0], list(result[1]))
     
 
-
-
 if __name__ == '__main__':
 
     data.ingest_distances()
@@ -138,9 +127,6 @@ if __name__ == '__main__':
             
         dsw = DeliveryScheduleWriter(winner)
         album = dsw.populate_album_with_snapshots()
-        # album.display_active_snapshots()
         user_interface(album)
-
-
     else:
-        print("This is very embarrassing, but no solution could be found!")
+        print("This is very embarrassing, but no solution to the Vehicle Routing Problem (VRP) could be found!")
