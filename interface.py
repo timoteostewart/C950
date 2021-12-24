@@ -20,8 +20,8 @@ def press_any_key():
 
 
 def parse_user_time(time_as_str):
-    am_designator_re = [r'.*(a[\.\ ]?[\ ]?m[\.\ ]?).*', r'.*(a[\.]?).*']
-    pm_designator_re = [r'.*(p[\.\ ]?[\ ]?m[\.\ ]?).*', r'.*(p[\.]?).*']
+    am_designator_re = [r'.*(a[\.]?[\ ]?m[\.]?).*', r'.*(a[\.]?).*']
+    pm_designator_re = [r'.*(p[\.]?[\ ]?m[\.]?).*', r'.*(p[\.]?).*']
     
     time_values_re = [r'([\d]{1,2})[^\d]*([\d]{2})', r'[\d]{1,2}']
 
@@ -61,7 +61,7 @@ def parse_user_time(time_as_str):
         is_am = True
         is_pm = False
     if hour > 24:
-        hour = 23
+        hour = hour % 24
     if hour > 12:
         is_am = False
         is_pm = True
@@ -74,11 +74,14 @@ def parse_user_time(time_as_str):
 
     # assign am/pm designator
     if is_am and not is_pm:
-        ampmdesignator = "a.m."
+        ampmdesignator = "am"
     elif is_pm and not is_am:
-        ampmdesignator = "p.m."
+        ampmdesignator = "pm"
     else: # (is_am and is_pm) or (not is_am and not is_pm):
-        ampmdesignator = "a.m."
+        if hour == 12:
+            ampmdesignator = "pm"
+        else:
+            ampmdesignator = "am"
 
     # display checks
     if minute < 10:
@@ -110,10 +113,15 @@ def user_interface(album: Album):
             elif cur_offset > album.final_return_to_hub_as_offset:
                 cur_offset = album.final_return_to_hub_as_offset 
         elif cmd == 't':
-            user_requested_time_str = input("Enter a time:")
+            user_requested_time_str = input("Enter a time: ")
             user_requested_time_str_sanitized = parse_user_time(user_requested_time_str)
-            # TODO: convert user_requested_time_str_sanitized to time offset, applying bounds checking
-            # set cur_offset to user_requested_offset
+            user_requested_offset = my_time.convert_time_to_minutes_offset(user_requested_time_str_sanitized)
+            if user_requested_offset < -1:
+                user_requested_offset = -1
+            elif user_requested_offset > album.final_return_to_hub_as_offset:
+                user_requested_offset = album.final_return_to_hub_as_offset
+            cur_offset = user_requested_offset
+            
         elif cmd == 'p':
             cur_offset = -1
             while cur_offset < album.final_return_to_hub_as_offset:

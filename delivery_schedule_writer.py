@@ -98,16 +98,21 @@ class DeliveryScheduleWriter:
                     else:
                         cur_truck.base_status = 'delivering'
 
+                if cur_truck.list_of_packages_delivered_to_this_stop:
+                    cur_snapshot.packages_delivered_in_this_minute = cur_truck.list_of_packages_delivered_to_this_stop
+                
                 cur_snapshot.is_key_frame = True
+
                 album.check_in_snapshot(cur_snapshot, cur_truck)
 
         
         for route in self.route_list.routes:
             self.route_list.truck_mileage_for_the_day[route.truck_number] += route.distance_traveled_in_miles
         
-        album.snapshots[album.final_return_to_hub_as_offset].all_trucks_cumulative_mileage_for_day = self.route_list.truck_mileage_for_the_day[1] + self.route_list.truck_mileage_for_the_day[2]
+        final_snapshot = album.snapshots[album.final_return_to_hub_as_offset]
+        final_snapshot.all_trucks_cumulative_mileage_for_day = self.route_list.truck_mileage_for_the_day[1] + self.route_list.truck_mileage_for_the_day[2]
+        final_snapshot.end_of_day_banner = ' (completed)'
 
-        album.snapshots[album.final_return_to_hub_as_offset].all_trucks_cumulative_mileage_for_day = self.route_list.truck_mileage_for_the_day[1] + self.route_list.truck_mileage_for_the_day[2]
         album.interpolate_snapshots()
 
         return album

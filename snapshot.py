@@ -39,6 +39,10 @@ def bold_text(s: str):
     return '\u001b[37;1m' + s + '\u001b[0m'
 
 
+def blue_text(s: str):
+    return '\u001b[34;1m' + s + '\u001b[0m'
+
+
 def unpack_package_ids(list_of_p_ids):
     if not list_of_p_ids:
         return ''
@@ -55,11 +59,13 @@ class Snapshot:
 
         self.trucks = [None, None, None] # skip zeroth element so that truck numbers are indexes
         self.package_statuses = [None] * 41 # skip zeroth element so that package ids are indexes
+        self.packages_delivered_in_this_minute = []
 
         # computed values
         self.all_trucks_cumulative_mileage_for_day = 0.0
 
         self.is_key_frame = False
+        self.end_of_day_banner = '            ' # or: ' (completed)'
         
 
     def expand_truck_base_statuses_to_detailed_statuses(self):
@@ -95,16 +101,23 @@ class Snapshot:
             else:
                 cur_row = ' '
             for pkg_ids_this_row in range(0, 31, 10):
-                cur_row += f"{str(row_num + pkg_ids_this_row)} {right_pad_to_n_chars(self.package_statuses[row_num + pkg_ids_this_row], 15)}  "
+                cur_pkg_id = row_num + pkg_ids_this_row
+                if cur_pkg_id in self.packages_delivered_in_this_minute:
+                    cur_row += f"{blue_text(str(cur_pkg_id))} {blue_text(right_pad_to_n_chars(self.package_statuses[cur_pkg_id], 15))}  "
+                else:
+                    cur_row += f"{str(cur_pkg_id)} {right_pad_to_n_chars(self.package_statuses[cur_pkg_id], 15)}  "
             all_package_statuses += cur_row
             all_package_statuses += '\n'
 
+
+
         print(f""
         f"==============================================================================\n"
-        f"Delivery Log Inspector for WGU package delivery system\n\n"
-        f"Current time: {bold_text(right_pad_to_n_chars(my_time.convert_minutes_offset_to_time(self.current_time_as_offset), 8))}    Commands: 't': go to time,  'p' play,  'q': quit\n"
-        f"                                    'a': ← 1 hr,  's': ← 10 min,  'd': ← 1 min\n"
+        f"Delivery Log Inspector              Commands:\n"
+        f"                                    't': go to time,  'p' play,  'q': quit\n"        f"Current time: {bold_text(right_pad_to_n_chars(my_time.convert_minutes_offset_to_time(self.current_time_as_offset) + self.end_of_day_banner, 20))}  'a': ← 1 hr,  's': ← 10 min,  'd': ← 1 min\n"
         f"All trucks mileage so far: {right_pad_to_n_chars(str(round_float_to_tenths_for_display(self.all_trucks_cumulative_mileage_for_day) + ' mi'), 8)} 'j': → 1 min,  'k': → 10 min,  'l': → 1 hr\n"
+        f"\n"
+
         f"T# Status\n"
         f"-- ---------------------------------------------------------------------------\n"
         f" 1 {self.trucks[1].detailed_status}\n"
