@@ -15,8 +15,12 @@ def update_truck_mileage_during_interpolation(truck: Truck):
 
 class Album:
     def __init__(self) -> None:
-        self.snapshots: list[snapshot.Snapshot] = [None] * (8 * 60) # up to 8 hours of delivery data, granular to 1-minute increments, so we'll store up to 8 * 60 (== 480) snapshots of package statuses and truck mileage stats
-        # note that snapshots[-1] will store the snapshot for 7:59 am
+        # self.snapshots holds up to 8 hours of delivery data, in 1-minute
+        # increments, so we'll store up to 8 * 60 (== 480) snapshots of package
+        # statuses and truck mileage stats. note that snapshots[-1] will store
+        # the snapshot for 7:59 am
+        self.snapshots: list[snapshot.Snapshot] = [None] * (8 * 60)
+        
         self.final_return_to_hub_as_offset = -1
 
 

@@ -12,9 +12,8 @@ from route import populate_1_route as populate_1_route
 from route import populate_2_routes as populate_2_routes
  
 
-def solver(first_departure_time, packages_at_hub):
-    empty_route_list = RouteList()
-    solver_helper(empty_route_list, my_time.convert_time_to_minutes_offset(first_departure_time), list(packages_at_hub))
+def solver(start_time, packages_at_hub):
+    solver_helper(RouteList(), my_time.time_to_offset(start_time), list(packages_at_hub))
     config.route_lists.sort(key=lambda route_list: route_list.cumulative_mileage)
     if config.route_lists:
         return config.route_lists[0]
@@ -23,34 +22,33 @@ def solver(first_departure_time, packages_at_hub):
 
 
 def solver_helper(route_list, current_time_as_offset, packages_at_hub):
-    # update route_list's cumulative mileage
+    # Update the route_list's cumulative mileage
     cumulative_mileage = 0.0
     number_of_packages_delivered = 0
     for route in route_list.routes:
-        if route.any_package_late:
-            return # discard this route_list since it contains late package(s)
         cumulative_mileage += route.distance_traveled_in_miles
         number_of_packages_delivered += len(route.package_manifest)
     route_list.cumulative_mileage = cumulative_mileage
     route_list.number_of_packages_delivered = number_of_packages_delivered
 
+    # Check if we can discard this route list for failing to meet constraints.
+    # This technique is called "branch and bound"
     if route_list and route_list.cumulative_mileage > 140:
-        return # discard this route_list
-    
-    if config.route_lists and route_list.cumulative_mileage > config.route_lists[0].cumulative_mileage:
-        return # discard this route_list
-
-    # see if we've taken too long
+        return
+    if route_list and config.route_lists and route_list.cumulative_mileage > config.route_lists[0].cumulative_mileage:
+        return # discard this route_list since it is worse than the best solution so far
     if current_time_as_offset > 600:
-        return # discard this route_list
+        return # discard this route_list since it's taking way too long (i.e., 600 minutes, or 6 p.m.).
+               #    this also helps avoid Python's "RecursionError: maximum recursion depth exceeded"
 
-    # see if we're out of packages
+    # If a route list passes the constraints above and has delivered all packages,
+    # then record it in config.route_lists
     if len(packages_at_hub) == 0:
         config.route_lists.append(route_list)
         config.route_lists.sort(key=lambda rl: rl.cumulative_mileage)
         return
 
-    # compute truck_availability and related times_of_future_interest
+    # Compute truck_availability and related times_of_future_interest
     trucks_unavailable = []
     future_times_of_interest = []
     for cur_route in route_list.routes:

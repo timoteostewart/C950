@@ -1,3 +1,4 @@
+import copy
 from dataclasses import dataclass
 import math
 
@@ -21,20 +22,11 @@ class Route:
         self.return_time_as_offset = -1
         self.any_package_late = False
 
+
     def __str__(self) -> str:
         slug = ""
-        slug += f"{self.truck_name.title()} departed at {my_time.convert_minutes_offset_to_time(self.departure_time_as_offset)}, returned at {my_time.convert_minutes_offset_to_time(self.return_time_as_offset)}, delivered {len(self.package_manifest)} packages, traveled {self.distance_traveled_in_miles} miles."
+        slug += f"{self.truck_name.title()} departed at {my_time.offset_to_time(self.departure_time_as_offset)}, returned at {my_time.offset_to_time(self.return_time_as_offset)}, delivered {len(self.package_manifest)} packages, traveled {self.distance_traveled_in_miles} miles."
         return slug
-
-    def deep_copy(self):
-        new_route = Route(self.name, self.departure_time_as_offset, self.truck_name)
-        new_route.packages_at_hub = list(self.packages_at_hub)
-        new_route.package_manifest = list(self.package_manifest)
-        new_route.ordered_list_of_stops = list(self.ordered_list_of_stops)
-        new_route.distance_traveled_in_miles = self.distance_traveled_in_miles
-        new_route.departure_time_as_offset = self.departure_time_as_offset
-        new_route.return_time_as_offset = self.return_time_as_offset
-        return new_route
 
 
     def load_package(self, pkg, packages_at_hub):
@@ -57,7 +49,7 @@ class Route:
 
 
     def create_ordered_list_of_stops(self):
-        # translate packages into stops
+        # Translate packages into stops since there could be multiple packages for the same stop
         stops_not_yet_added_to_path = []
         for street_address in set([x.street_address for x in self.package_manifest]):
             cur_stop = config.all_stops_by_street_address_ht.get(street_address)
@@ -67,7 +59,7 @@ class Route:
         path = [geo.HUB_STOP]
         prev_stop = geo.HUB_STOP
 
-        # add stops to path using "nearest neighbor" strategy
+        # Add stops to path using "nearest neighbor" strategy
         while stops_not_yet_added_to_path:
             stops_not_yet_added_to_path.sort(key=lambda stop: config.distances_between_pairs_ht.get(f"{prev_stop.street_address} and {stop.street_address}"))
             cur_stop = stops_not_yet_added_to_path.pop(0)
@@ -87,7 +79,7 @@ class Route:
                     result += f"{pkg.id} "
         return result
 
-    
+
     def update_route_stats(self):
         # guard clause
         if len(self.package_manifest) == 0:
@@ -145,7 +137,7 @@ class RouteList:
     def deep_copy(self):
         new_route_list = RouteList()
         for route in self.routes:
-            new_route_list.routes.append(route.deep_copy())
+            new_route_list.routes.append(copy.copy(route))
         new_route_list.cumulative_mileage = self.cumulative_mileage
         new_route_list.number_of_packages_delivered = self.number_of_packages_delivered
         new_route_list.first_departure_time_as_offset = self.first_departure_time_as_offset

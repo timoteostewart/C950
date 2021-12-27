@@ -96,7 +96,7 @@ class Snapshot:
         print(f""
         f"==============================================================================\n"
         f"Delivery Log Inspector              Commands:\n"
-        f"                                    't': go to time,  'p' play,  'q': quit\n"        f"Current time: {bold_text(right_pad_to_n_chars(my_time.convert_minutes_offset_to_time(self.current_time_as_offset) + self.end_of_day_banner, 20))}  'a': ← 1 hr,  's': ← 10 min,  'd': ← 1 min\n"
+        f"                                    't': go to time,  'p' play,  'q': quit\n"        f"Current time: {bold_text(right_pad_to_n_chars(my_time.offset_to_time(self.current_time_as_offset) + self.end_of_day_banner, 20))}  'a': ← 1 hr,  's': ← 10 min,  'd': ← 1 min\n"
         f"All trucks mileage so far: {right_pad_to_n_chars(str(round_float_to_tenths_for_display(self.all_trucks_cumulative_mileage_for_day) + ' mi'), 8)} 'j': → 1 min,  'k': → 10 min,  'l': → 1 hr\n"
         f"\n"
 

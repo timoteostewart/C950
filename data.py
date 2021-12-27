@@ -70,7 +70,7 @@ def ingest_packages():
             if deadline_as_time == 'EOD':
                 deadline_as_offset = 1440 # 1440 minutes = 24 hours * 60 minutes; value of 1440 is sentinel value that represents a deadline of "end of day"
             else:
-                deadline_as_offset = my_time.convert_time_to_minutes_offset(deadline_as_time)
+                deadline_as_offset = my_time.time_to_offset(deadline_as_time)
 
             when_can_leave_hub = 0
             package_affinities = {0} # a set representing the package id's of other packages that must be delivered with this package
@@ -87,14 +87,14 @@ def ingest_packages():
                     pattern = r'until ([0-9:\ am]+)'
                     a = re.search(pattern, notes)
                     if a:
-                        when_can_leave_hub = my_time.convert_time_to_minutes_offset(a.group(1))
+                        when_can_leave_hub = my_time.time_to_offset(a.group(1))
                         delivery_status = 'not yet at hub'
                 if "Wrong address listed" in notes:
                     # print("is on hold at hub")
                     pattern = r'until ([0-9:\ am]+)'
                     a = re.search(pattern, notes)
                     if a:
-                        when_can_leave_hub = my_time.convert_time_to_minutes_offset(a.group(1))
+                        when_can_leave_hub = my_time.time_to_offset(a.group(1))
                         delivery_status = 'incorrect addr.'
                 if "Must be delivered with" in notes:
                     pattern = r'\b([\d]+)\b'

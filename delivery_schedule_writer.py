@@ -78,7 +78,7 @@ class DeliveryScheduleWriter:
                 cur_truck.num_pkgs_being_delivered_now = 0
                 cur_truck.list_of_packages_delivered_to_this_stop = []
                 for pkg in route.package_manifest:
-                    delivered_status = f"dlvrd @{my_time.convert_minutes_offset_to_time(cur_time_as_offset)}"
+                    delivered_status = f"dlvrd @{my_time.offset_to_time(cur_time_as_offset)}"
                     if pkg.street_address == cur_stop.street_address:
                         cur_truck.list_of_packages_delivered_to_this_stop.append(pkg.id)
                         cur_truck.num_pkgs_being_delivered_now += 1

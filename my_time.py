@@ -1,7 +1,7 @@
 import math
 import re
 
-def convert_time_to_minutes_offset(time):
+def time_to_offset(time):
     colon_offset = time.find(':')
     space_offset = time.find(' ')
     hour = int(time[0:colon_offset])
@@ -16,7 +16,7 @@ def convert_time_to_minutes_offset(time):
     return offset_in_minutes
 
 
-def convert_minutes_offset_to_time(offset_in_minutes):
+def offset_to_time(offset_in_minutes):
     minute = offset_in_minutes % 60
     hour = 8 + int(math.floor(offset_in_minutes / 60))
 

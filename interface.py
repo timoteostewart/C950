@@ -23,7 +23,7 @@ def press_any_key():
 def user_interface(album: Album):
     press_any_key()
     clear_screen()
-    print(f"The delivery log contains {album.final_return_to_hub_as_offset} minutes of data, from 7:59 am to {my_time.convert_minutes_offset_to_time(album.final_return_to_hub_as_offset)}.\n")
+    print(f"The delivery log contains {album.final_return_to_hub_as_offset} minutes of data, from 7:59 am to {my_time.offset_to_time(album.final_return_to_hub_as_offset)}.\n")
     
     cur_offset = -1
     
@@ -40,7 +40,7 @@ def user_interface(album: Album):
         elif cmd == 't':
             user_requested_time_str = input("Enter a time: ")
             user_requested_time_str_sanitized = parse_user_time(user_requested_time_str)
-            user_requested_offset = my_time.convert_time_to_minutes_offset(user_requested_time_str_sanitized)
+            user_requested_offset = my_time.time_to_offset(user_requested_time_str_sanitized)
             cur_offset = user_requested_offset
         elif cmd == 'p':
             cur_offset = -1
