@@ -14,7 +14,7 @@ class Truck:
         self.cur_num_pkgs: int = 0
         self.num_pkgs_being_delivered_now: int = 0
         
-        self.base_status: str = '' # possible values: 'at hub', 'departing hub', 'en route', 'delivering', 'returning', 'back at hub'
+        self.base_status: str = ''  # possible values: 'at hub', 'departing hub', 'en route', 'delivering', 'returning', 'back at hub'
         self.detailed_status: str = ''
         self.cur_stop_street_address: str = ''
         self.list_of_packages_delivered_to_this_stop = []

@@ -8,15 +8,15 @@ from my_time import parse_user_time as parse_user_time
 
 def clear_screen():
     if os.name == 'posix':
-        _ = os.system('clear') # Mac and Linux
+        _ = os.system('clear')  # Mac and Linux
     else:
-        _ = os.system('cls') # Windows
+        _ = os.system('cls')  # Windows
 
 
 def press_any_key():
-    if os.name == 'posix': # Mac and Linux
+    if os.name == 'posix':  # Mac and Linux
         _ = os.system('read -s -n 1 -p "Press any key to continue..."')
-    else: # Windows
+    else:  # Windows
         _ = os.system('pause')
 
 
@@ -48,7 +48,7 @@ def user_interface(album: Album):
                 clear_screen()
                 album.snapshots[cur_offset].display()
                 
-                if album.snapshots[cur_offset].trucks[1].detailed_status.startswith('de') or album.snapshots[cur_offset].trucks[2].detailed_status.startswith('de'): # will catch both 'departing' and 'delivering'
+                if album.snapshots[cur_offset].trucks[1].detailed_status.startswith('de') or album.snapshots[cur_offset].trucks[2].detailed_status.startswith('de'):  # will catch both 'departing' and 'delivering'
                     time.sleep(3)
                 elif cur_offset == -1:
                     time.sleep(3)
@@ -60,7 +60,7 @@ def user_interface(album: Album):
         else:
             print("")
 
-        # bounds checking
+         # bounds checking
         if cur_offset < -1:
             cur_offset = -1
         elif cur_offset > album.final_return_to_hub_as_offset:

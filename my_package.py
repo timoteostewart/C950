@@ -9,7 +9,7 @@ class Package:
         self.notes: str = notes
         self.when_can_leave_hub_as_offset: int = when_can_leave_hub
         self.package_affinities = package_affinities
-        self.truck_affinity: str = truck_affinity # format is: 'truck 1' or 'truck 2'
+        self.truck_affinity: str = truck_affinity  # format is: 'truck 1' or 'truck 2'
         self.distance_from_hub: float = distance_from_hub
         self.delivery_status = delivery_status
 
