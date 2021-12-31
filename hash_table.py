@@ -9,10 +9,10 @@ class HashTable:
     
     @staticmethod
     def hash_code(string: str):
-        string = str(string)  # ensure input is cast to str for hash coding
-        hc = 0  # what we'll return
-        for character in string:  # create hash code incrementally for each char in the str
-            hc = 31 * hc + ord(character)  # 31 is used because it is a prime number
+        string = str(string) # ensure input is cast to str for hash coding
+        hc = 0 # what we'll return
+        for character in string: # create hash code incrementally for each char in the str
+            hc = 31 * hc + ord(character) # 31 is used because it is a prime number
         return hc
 
     def add(self, key, value):
@@ -30,4 +30,4 @@ class HashTable:
             for (K, V) in self.table[bucket]:
                 if K == key:
                     return V
-        return None  # if key not found, return None
+        return None # if key not found, return None

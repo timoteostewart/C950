@@ -17,7 +17,7 @@ class Route:
         self.package_manifest = []
         self.ordered_list_of_stops = []
 
-         # stats
+        # stats
         self.distance_traveled_in_miles = 0.0
         self.return_time_as_offset = -1
         self.any_package_late = False
@@ -49,7 +49,7 @@ class Route:
 
 
     def create_ordered_list_of_stops(self):
-         # Translate packages into stops since there could be multiple packages for the same stop
+        # Translate packages into stops since there could be multiple packages for the same stop
         stops_not_yet_added_to_path = []
         for street_address in set([x.street_address for x in self.package_manifest]):
             cur_stop = config.all_stops_by_street_address_ht.get(street_address)
@@ -59,7 +59,7 @@ class Route:
         path = [geo.HUB_STOP]
         prev_stop = geo.HUB_STOP
 
-         # Add stops to path using "nearest neighbor" strategy
+        # Add stops to path using "nearest neighbor" strategy
         while stops_not_yet_added_to_path:
             stops_not_yet_added_to_path.sort(key=lambda stop: config.distances_between_pairs_ht.get(f"{prev_stop.street_address} and {stop.street_address}"))
             cur_stop = stops_not_yet_added_to_path.pop(0)
@@ -81,16 +81,16 @@ class Route:
 
 
     def update_route_stats(self):
-         # guard clause
+        # guard clause
         if len(self.package_manifest) == 0:
             self.any_package_late = False
             self.distance_traveled_in_miles = 0.0
             self.return_time_as_offset = self.departure_time_as_offset
             return
 
-         # to be updated:    self.any_package_late: bool
-         #                   self.distance_traveled_in_miles: float
-         #                   self.return_time_as_offset: int
+        # to be updated:    self.any_package_late: bool
+        #                   self.distance_traveled_in_miles: float
+        #                   self.return_time_as_offset: int
         
         self.any_package_late = False
         cur_time_as_offset = self.departure_time_as_offset
@@ -103,7 +103,7 @@ class Route:
             prev_stop = stop
             cur_stop = self.ordered_list_of_stops[i+1]
             leg_distance = geo.get_distance_between_stops(prev_stop, cur_stop)
-            leg_time = int(math.ceil(leg_distance * config.MINUTES_PER_MILE))  # round time up to next minute
+            leg_time = int(math.ceil(leg_distance * config.MINUTES_PER_MILE)) # round time up to next minute
             cur_time_as_offset += leg_time
 
             packages_delivered_this_stop = []
@@ -111,10 +111,10 @@ class Route:
                 if pkg.street_address == cur_stop.street_address:
                     packages_delivered_this_stop.append(pkg)
             for pkg in packages_delivered_this_stop:
-                if pkg.deadline_as_offset < 1440:  # if rush...
-                        if pkg.deadline_as_offset < cur_time_as_offset:  # and if late...
+                if pkg.deadline_as_offset < 1440: # if rush...
+                        if pkg.deadline_as_offset < cur_time_as_offset: # and if late...
                             self.any_package_late = True
-                             # pass
+                            # pass
                 packages_delivered.append(pkg)
                 packages_to_deliver.remove(pkg)
 
@@ -172,18 +172,18 @@ def update_package_affinity_packages_view(packages_at_hub):
 
 
 def populate_1_route(departure_time_as_offset: int, packages_at_hub, truck_name):
-    packages_at_hub = list(packages_at_hub)  # make a copy
+    packages_at_hub = list(packages_at_hub) # make a copy
 
     route1 = Route('route1', departure_time_as_offset, truck_name)
 
-     # identify eligible packages
+    # identify eligible packages
     eligible_rush_packages, eligible_nonrush_packages = update_rush_nonrush_packages_views(departure_time_as_offset, packages_at_hub)
-     # sort packages_at_hub by soonest due, then by distance from hub
+    # sort packages_at_hub by soonest due, then by distance from hub
     eligible_rush_packages.sort(key=lambda pkg: pkg.when_can_leave_hub_as_offset * 100 + pkg.distance_from_hub)
     eligible_nonrush_packages.sort(key=lambda pkg: pkg.when_can_leave_hub_as_offset * 100 + pkg.distance_from_hub)
     affinity_packages_view = update_package_affinity_packages_view(packages_at_hub)
 
-     # load rush packages
+    # load rush packages
     while eligible_rush_packages and len(route1.package_manifest) < 16:
         cur_pkg = eligible_rush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != truck_name:
@@ -193,14 +193,14 @@ def populate_1_route(departure_time_as_offset: int, packages_at_hub, truck_name)
             route1.unload_package(cur_pkg, packages_at_hub)
             break
         
-         # handler for packages that must be delivered with other packages
-         # (i.e., handler for packages in affinity with each other)
+        # handler for packages that must be delivered with other packages
+        # (i.e., handler for packages in affinity with each other)
         if cur_pkg in affinity_packages_view:
             for pkg in affinity_packages_view:
                 if pkg not in route1.package_manifest:
                     route1.load_package(pkg, packages_at_hub)
 
-     # load nonrush packages
+    # load nonrush packages
     while eligible_nonrush_packages and len(route1.package_manifest) < 16:
         cur_pkg = eligible_nonrush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != truck_name:
@@ -214,24 +214,24 @@ def populate_1_route(departure_time_as_offset: int, packages_at_hub, truck_name)
 
 
 def populate_2_routes(departure_time_as_offset: int, packages_at_hub, truck_names):
-    packages_at_hub = list(packages_at_hub)  # make a copy
+    packages_at_hub = list(packages_at_hub) # make a copy
 
     route1 = Route('route1', departure_time_as_offset, truck_names[0])
     route2 = Route('route2', departure_time_as_offset, truck_names[1])
 
-     # if just one package, then populate one route with it and return that result
+    # if just one package, then populate one route with it and return that result
     if len(packages_at_hub) == 1:
         result = populate_1_route(departure_time_as_offset, list(packages_at_hub), 'truck 2')
         return ([result[0][0]],  list(result[1]))
 
-     # identify eligible packages
+    # identify eligible packages
     eligible_rush_packages, eligible_nonrush_packages = update_rush_nonrush_packages_views(departure_time_as_offset, packages_at_hub)
-     # sort packages_at_hub by soonest due, then by distance from hub
+    # sort packages_at_hub by soonest due, then by distance from hub
     eligible_rush_packages.sort(key=lambda pkg: pkg.when_can_leave_hub_as_offset * 100 + pkg.distance_from_hub)
     eligible_nonrush_packages.sort(key=lambda pkg: pkg.when_can_leave_hub_as_offset * 100 + pkg.distance_from_hub)
     affinity_packages_view = update_package_affinity_packages_view(packages_at_hub)
 
-     # load route1 rush
+    # load route1 rush
     while eligible_rush_packages and len(route1.package_manifest) < 16:
         cur_pkg = eligible_rush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != route1.truck_name:
@@ -241,14 +241,14 @@ def populate_2_routes(departure_time_as_offset: int, packages_at_hub, truck_name
             route1.unload_package(cur_pkg, packages_at_hub)
             break
 
-         # handler for packages that must be delivered with other packages
-         # (i.e., handler for packages in affinity with each other)
+        # handler for packages that must be delivered with other packages
+        # (i.e., handler for packages in affinity with each other)
         if cur_pkg in affinity_packages_view:
             for pkg in affinity_packages_view:
                 if pkg not in route1.package_manifest:
                     route1.load_package(pkg, packages_at_hub)
 
-     # load route1 nonrush
+    # load route1 nonrush
     while eligible_nonrush_packages and len(route1.package_manifest) < 16:
         cur_pkg = eligible_nonrush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != route1.truck_name:
@@ -258,13 +258,13 @@ def populate_2_routes(departure_time_as_offset: int, packages_at_hub, truck_name
             route1.unload_package(cur_pkg, packages_at_hub)
             break
 
-     # recalculate eligible packages
+    # recalculate eligible packages
     eligible_rush_packages, eligible_nonrush_packages = update_rush_nonrush_packages_views(departure_time_as_offset, packages_at_hub)
-     # sort packages_at_hub by soonest due, then by distance from hub
+    # sort packages_at_hub by soonest due, then by distance from hub
     eligible_rush_packages.sort(key=lambda pkg: pkg.when_can_leave_hub_as_offset * 100 + pkg.distance_from_hub)
     eligible_nonrush_packages.sort(key=lambda pkg: pkg.when_can_leave_hub_as_offset * 100 + pkg.distance_from_hub)
 
-      # load route2 rush
+     # load route2 rush
     while eligible_rush_packages and len(route2.package_manifest) < 16:
         cur_pkg = eligible_rush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != route2.truck_name:
@@ -274,7 +274,7 @@ def populate_2_routes(departure_time_as_offset: int, packages_at_hub, truck_name
             route2.unload_package(cur_pkg, packages_at_hub)
             break
 
-     # load route2 nonrush
+    # load route2 nonrush
     while eligible_nonrush_packages and len(route2.package_manifest) < 16:
         cur_pkg = eligible_nonrush_packages.pop(0)
         if cur_pkg.truck_affinity and cur_pkg.truck_affinity != route2.truck_name:

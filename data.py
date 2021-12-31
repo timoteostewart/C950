@@ -8,18 +8,18 @@ import my_time
 from my_package import Package
 
 def ingest_distances():
-     # populate list_of_locations
+    # populate list_of_locations
     list_of_street_addresses = []
     with open('WGUPS Distance Table.csv') as csvfile:
         distances = csv.reader(csvfile, delimiter=',')
         for row in distances:
             if row[0] != '' and row[1] != '' and ord(row[0][0]) <= 90:
-                 # populate list_of_street_addresses
+                # populate list_of_street_addresses
                 street_address = row[1]
-                street_address = street_address[:-8]  # truncate parenthetical zip code
+                street_address = street_address[:-8] # truncate parenthetical zip code
                 list_of_street_addresses.append(street_address)
 
-     # populate config.distances_between_pairs_ht (hash table)
+    # populate config.distances_between_pairs_ht (hash table)
     with open('WGUPS Distance Table.csv') as csvfile:
         distances = csv.reader(csvfile, delimiter=',')
         cur_row = 0
@@ -43,7 +43,7 @@ def ingest_distances():
                         config.distances_between_pairs_ht.add(K_reversed, V)
                         
     for street_address in list_of_street_addresses:
-         # populate config.all_stops_by_street_address_ht (hash table)
+        # populate config.all_stops_by_street_address_ht (hash table)
         cur_stop = geo.Stop(street_address, geo.get_distance(geo.HUB_STREET_ADDRESS, street_address))
         config.all_stops_by_street_address_ht.add(street_address, cur_stop)
 
@@ -54,7 +54,7 @@ def ingest_packages():
         distances = csv.reader(csvfile, delimiter=',')
         for row in distances:
             state = row[3]
-            if state != 'UT':  # skip header rows that precede package data rows
+            if state != 'UT': # skip header rows that precede package data rows
                 continue
 
             package_id = int(row[0])
@@ -65,17 +65,17 @@ def ingest_packages():
             weight_kg = int(row[6])
             notes = row[7]
 
-             # compute deadline as an offset from 8 a.m.
-            deadline_as_offset = None  # we will initialize next
+            # compute deadline as an offset from 8 a.m.
+            deadline_as_offset = None # we will initialize next
             if deadline_as_time == 'EOD':
-                deadline_as_offset = 1440  # 1440 minutes = 24 hours * 60 minutes; value of 1440 is sentinel value that represents a deadline of "end of day"
+                deadline_as_offset = 1440 # 1440 minutes = 24 hours * 60 minutes; value of 1440 is sentinel value that represents a deadline of "end of day"
             else:
                 deadline_as_offset = my_time.time_to_offset(deadline_as_time)
 
             when_can_leave_hub = 0
-            package_affinities = {0}  # a set representing the package id's of other packages that must be delivered with this package
-            truck_affinity = ''  # format is: 'truck 1' or 'truck 2'
-            delivery_status = ''  # will initialize below
+            package_affinities = {0} # a set representing the package id's of other packages that must be delivered with this package
+            truck_affinity = '' # format is: 'truck 1' or 'truck 2'
+            delivery_status = '' # will initialize below
 
             if notes:
                 if "Can only be on truck" in notes:
@@ -90,7 +90,7 @@ def ingest_packages():
                         when_can_leave_hub = my_time.time_to_offset(a.group(1))
                         delivery_status = 'not yet at hub'
                 if "Wrong address listed" in notes:
-                     # print("is on hold at hub")
+                    # print("is on hold at hub")
                     pattern = r'until ([0-9:\ am]+)'
                     a = re.search(pattern, notes)
                     if a:
@@ -108,10 +108,10 @@ def ingest_packages():
             distance_from_hub = geo.get_distance(geo.HUB_STREET_ADDRESS, street_address)
 
             if not delivery_status:
-                 # if we haven't assigned a special delivery status, default to 'at hub'
+                # if we haven't assigned a special delivery status, default to 'at hub'
                 delivery_status = 'at hub'
 
-             # add this package to our hash table
+            # add this package to our hash table
             cur_package = Package(package_id, street_address, city, zip, deadline_as_offset, weight_kg, notes, when_can_leave_hub, package_affinities, truck_affinity, distance_from_hub, delivery_status)
             config.all_packages_by_id_ht.add(package_id, cur_package)
             

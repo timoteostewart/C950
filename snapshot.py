@@ -45,15 +45,15 @@ class Snapshot:
         self.current_time_as_offset: int = current_time_as_offset
         self.current_time_as_display: str = ''
 
-        self.trucks = [None, None, None]  # skip zeroth element so that truck numbers are indexes
-        self.package_statuses = [None] * 41  # skip zeroth element so that package ids are indexes
+        self.trucks = [None, None, None] # skip zeroth element so that truck numbers are indexes
+        self.package_statuses = [None] * 41 # skip zeroth element so that package ids are indexes
         self.packages_delivered_in_this_minute = []
 
-         # computed values
+        # computed values
         self.all_trucks_cumulative_mileage_for_day = 0.0
 
         self.is_key_frame = False
-        self.end_of_day_banner = '            '  # or: ' (completed)'
+        self.end_of_day_banner = '            ' # or: ' (completed)'
         
 
     def expand_truck_base_statuses_to_detailed_statuses(self):
@@ -77,7 +77,7 @@ class Snapshot:
         
 
     def display(self):
-         # construct package status lines
+        # construct package status lines
         all_package_statuses = ''
         for row_num in range(1, 11):
             if row_num == 10:

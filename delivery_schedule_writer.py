@@ -20,13 +20,13 @@ class DeliveryScheduleWriter:
 
         album = Album()
 
-        trucks = [None, Truck('truck 1'), Truck('truck 2')]  # skip zeroth element so that truck numbers are indexes
-         # load initial truck statuses
+        trucks = [None, Truck('truck 1'), Truck('truck 2')] # skip zeroth element so that truck numbers are indexes
+        # load initial truck statuses
         trucks[1].base_status = 'at hub'
         trucks[2].base_status = 'at hub'
 
         sevenfiftynine = Snapshot(-1)
-         # load initial package statuses that were set during package ingestion
+        # load initial package statuses that were set during package ingestion
         for p_id in range(1, 41):
             sevenfiftynine.package_statuses[p_id] = config.all_packages_by_id_ht.get(p_id).delivery_status
         sevenfiftynine.is_key_frame = True
@@ -37,7 +37,7 @@ class DeliveryScheduleWriter:
 
             snapshot_for_minute_of_departure = Snapshot(route.departure_time_as_offset)
             
-             # keep track of when last truck returns to hub
+            # keep track of when last truck returns to hub
             if route.return_time_as_offset > album.final_return_to_hub_as_offset:
                 album.final_return_to_hub_as_offset = route.return_time_as_offset
 
@@ -60,7 +60,7 @@ class DeliveryScheduleWriter:
             for i, _ in enumerate(route.ordered_list_of_stops):
                 
                 if i == 0:
-                    continue  # skip hub stop, since it was already saved in `snapshot_for_minute_of_departure``
+                    continue # skip hub stop, since it was already saved in `snapshot_for_minute_of_departure``
                 
                 prev_stop = route.ordered_list_of_stops[i-1]
                 cur_stop = route.ordered_list_of_stops[i]
@@ -70,7 +70,7 @@ class DeliveryScheduleWriter:
                 cur_truck.mileage_for_this_route_so_far += leg_distance
                 cur_truck.cumulative_mileage_for_the_day_display += leg_distance
                 
-                leg_time = int(math.ceil(leg_distance * config.MINUTES_PER_MILE))  # round time up to next minute
+                leg_time = int(math.ceil(leg_distance * config.MINUTES_PER_MILE)) # round time up to next minute
                 cur_time_as_offset += leg_time
 
                 cur_snapshot = Snapshot(cur_time_as_offset)
@@ -99,11 +99,11 @@ class DeliveryScheduleWriter:
                 if cur_truck.list_of_packages_delivered_to_this_stop:
                     cur_snapshot.packages_delivered_in_this_minute = cur_truck.list_of_packages_delivered_to_this_stop
                 
-                cur_snapshot.is_key_frame = True  # this means we won't interpolate the truck's mileage, because we already know the exact value
+                cur_snapshot.is_key_frame = True # this means we won't interpolate the truck's mileage, because we already know the exact value
 
                 album.check_in_snapshot(cur_snapshot, cur_truck)
 
-         # calculate total miles traveled for each truck
+        # calculate total miles traveled for each truck
         for route in self.route_list.routes:
             self.route_list.truck_mileage_for_the_day[route.truck_number] += route.distance_traveled_in_miles
         
@@ -111,7 +111,7 @@ class DeliveryScheduleWriter:
         final_snapshot.all_trucks_cumulative_mileage_for_day = self.route_list.truck_mileage_for_the_day[1] + self.route_list.truck_mileage_for_the_day[2]
         final_snapshot.end_of_day_banner = ' (completed)'
 
-         # fill in snapshots between the key snapshots; mostly this is all the "en route" traveling by trucks
+        # fill in snapshots between the key snapshots; mostly this is all the "en route" traveling by trucks
         album.interpolate_snapshots()
 
         return album
